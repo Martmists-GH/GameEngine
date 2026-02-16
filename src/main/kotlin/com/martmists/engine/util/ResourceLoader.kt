@@ -46,17 +46,19 @@ object ResourceLoader {
         aiProcess_Triangulate,
     ).reduce(Int::or)
 
-    private val boneOffsetsMap = mutableMapOf<String, Mat4x4>()
-    private val boneNamesList = mutableListOf<String>()
+    private class LoadContext(
+        val directory: Resource,
+        val embeddedTextures: Map<String, ByteBuffer>,
+    ) {
+        val boneOffsetsMap = mutableMapOf<String, Mat4x4>()
+        val boneNameList = mutableListOf<String>()
+    }
+
 
     fun loadModel(res: Resource): Model {
         return modelCache.getOrPut(res.absolutePath) {
             val store = aiCreatePropertyStore() ?: error("Unable to create property store")
             aiSetImportPropertyInteger(store, AI_CONFIG_PP_SBBC_MAX_BONES, 200)
-
-            boneOffsetsMap.clear()
-            boneNamesList.clear()
-            val dir = res.parentResource
 
             val bytes = res.readAllBytes()
             val buffer = MemoryUtil.memAlloc(bytes.size)
@@ -80,44 +82,51 @@ object ResourceLoader {
                     (filename to tex.pcDataCompressed()).takeIf { filename.isNotBlank() }
                 )
             }.flatten().toMap()
-            val materials = Array(aiScene.mNumMaterials()) {
-                val mat = AIMaterial.create(aiScene.mMaterials()!![it])
-                parseMaterial(mat, dir, embeddedTextures)
-            }
-            val parts = Array(aiScene.mNumMeshes()) {
-                val aiMesh = AIMesh.create(aiScene.mMeshes()!![it])
-                val mat = materials[aiMesh.mMaterialIndex()]
-                val mesh = parseMesh(aiMesh)
-                Geometry(
-                    mesh,
-                    mat,
-                )
-            }
-            val root = parseTree(aiScene.mRootNode()!!, parts)
-            Model(res, root, animations, boneOffsetsMap.toMap()) {
-                Shader(
-                    loadTextFile(Resource("res:shaders/default.vert.glsl")),
-                    loadTextFile(Resource("res:shaders/default.frag.glsl")),
-                )
+            val context = LoadContext(
+                res.parentResource,
+                embeddedTextures
+            )
+            with(context) {
+                val materials = Array(aiScene.mNumMaterials()) {
+                    val mat = AIMaterial.create(aiScene.mMaterials()!![it])
+                    parseMaterial(mat)
+                }
+                val parts = Array(aiScene.mNumMeshes()) {
+                    val aiMesh = AIMesh.create(aiScene.mMeshes()!![it])
+                    val mat = materials[aiMesh.mMaterialIndex()]
+                    val mesh = parseMesh(aiMesh)
+                    Geometry(
+                        mesh,
+                        mat,
+                    )
+                }
+                val root = parseTree(aiScene.mRootNode()!!, parts)
+                Model(res, root, animations, boneOffsetsMap.toMap()) {
+                    Shader(
+                        loadTextFile(Resource("res:shaders/default.vert.glsl")),
+                        loadTextFile(Resource("res:shaders/default.frag.glsl")),
+                    )
+                }
             }
         }
     }
 
-    private fun parseMaterial(mat: AIMaterial, dir: Resource, embeddedTextures: Map<String, ByteBuffer>): Material {
+    context(ctx: LoadContext)
+    private fun parseMaterial(mat: AIMaterial): Material {
         return Material(
             mat.getString(AI_MATKEY_NAME),
             mat.getColor(AI_MATKEY_COLOR_AMBIENT),
             mat.getColor(AI_MATKEY_COLOR_DIFFUSE),
             mat.getColor(AI_MATKEY_COLOR_EMISSIVE),
             mat.getColor(AI_MATKEY_COLOR_SPECULAR),
-            mat.getTexture(aiTextureType_AMBIENT, dir, embeddedTextures, true),
-            mat.getTexture(aiTextureType_DIFFUSE, dir, embeddedTextures, true),
-            mat.getTexture(aiTextureType_EMISSIVE, dir, embeddedTextures, true),
-            mat.getTexture(aiTextureType_SPECULAR, dir, embeddedTextures, true),
-            mat.getTexture(aiTextureType_NORMALS, dir, embeddedTextures, false),
-            mat.getTexture(aiTextureType_DISPLACEMENT, dir, embeddedTextures, false)
-                ?: mat.getTexture(aiTextureType_HEIGHT, dir, embeddedTextures, false)
-                ?: mat.getTexture(aiTextureType_DIFFUSE_ROUGHNESS, dir, embeddedTextures, false),
+            mat.getTexture(aiTextureType_AMBIENT, true),
+            mat.getTexture(aiTextureType_DIFFUSE, true),
+            mat.getTexture(aiTextureType_EMISSIVE, true),
+            mat.getTexture(aiTextureType_SPECULAR, true),
+            mat.getTexture(aiTextureType_NORMALS, false),
+            mat.getTexture(aiTextureType_DISPLACEMENT, false)
+                ?: mat.getTexture(aiTextureType_HEIGHT, false)
+                ?: mat.getTexture(aiTextureType_DIFFUSE_ROUGHNESS, false),
             mat.getUVIndex(aiTextureType_AMBIENT),
             mat.getUVIndex(aiTextureType_DIFFUSE),
             mat.getUVIndex(aiTextureType_EMISSIVE),
@@ -146,14 +155,15 @@ object ResourceLoader {
         return Color(color.r(), color.g(), color.b(), color.a())
     }
 
-    private fun AIMaterial.getTexture(key: Int, dir: Resource, embeddedTextures: Map<String, ByteBuffer>, isSRGB: Boolean): TextureHandle? {
+    context(ctx: LoadContext)
+    private fun AIMaterial.getTexture(key: Int, isSRGB: Boolean): TextureHandle? {
         val texPath = AIString.create().also { aiGetMaterialTexture(this, key, 0, it, null as IntArray?, null, null, null, null, null) }
         val relPath = texPath.dataString()
         if (relPath.isBlank()) return null
-        val texFile = dir.resolve(relPath.replace('\\', '/'))
-        if (texFile.exists() || embeddedTextures.containsKey(relPath)) {
+        val texFile = ctx.directory.resolve(relPath.replace('\\', '/'))
+        if (texFile.exists() || ctx.embeddedTextures.containsKey(relPath)) {
             return textureCache.getOrPut(texFile.path) {
-                embeddedTextures[relPath]?.let {
+                ctx.embeddedTextures[relPath]?.let {
                     parseImage(it, isSRGB)
                 } ?: run {
                     val bytes = texFile.readAllBytes()
@@ -212,6 +222,7 @@ object ResourceLoader {
         }
     }
 
+    context(ctx: LoadContext)
     private fun parseMesh(aiMesh: AIMesh): ModelMesh {
         val name = aiMesh.mName().dataString()
         val vertexCount = aiMesh.mNumVertices()
@@ -226,12 +237,12 @@ object ResourceLoader {
         for (b in 0 until aiMesh.mNumBones()) {
             val aiBone = AIBone.create(aiMesh.mBones()!![b])
             val boneName = aiBone.mName().dataString()
-            val boneId = if (boneOffsetsMap.containsKey(boneName)) {
-                boneNamesList.indexOf(boneName)
+            val boneId = if (ctx.boneOffsetsMap.containsKey(boneName)) {
+                ctx.boneNameList.indexOf(boneName)
             } else {
-                val id = boneNamesList.size
-                boneNamesList.add(boneName)
-                boneOffsetsMap[boneName] = aiBone.mOffsetMatrix().toMat4x4()
+                val id = ctx.boneNameList.size
+                ctx.boneNameList.add(boneName)
+                ctx.boneOffsetsMap[boneName] = aiBone.mOffsetMatrix().toMat4x4()
                 id
             }
 

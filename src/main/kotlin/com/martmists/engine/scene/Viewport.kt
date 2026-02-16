@@ -19,7 +19,7 @@ class Viewport(var scene: Scene = Scene.Empty) {
             } else null
         }
         set(value: GameObject?) {
-            activeCameraIndex = if (camera == null) {
+            activeCameraIndex = if (value == null) {
                 -1
             } else {
                 scene.objects.filter { it.hasComponent<Camera>() }.indexOf(value)

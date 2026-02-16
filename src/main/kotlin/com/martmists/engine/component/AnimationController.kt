@@ -7,6 +7,8 @@ import com.martmists.engine.scene.GameObject
 import com.martmists.engine.animation.Animation
 import com.martmists.engine.animation.Interpolation
 import com.martmists.engine.animation.Keyframe
+import org.lwjgl.assimp.Assimp.aiAnimInterpolation_Linear
+import org.lwjgl.assimp.Assimp.aiAnimInterpolation_Spherical_Linear
 
 class AnimationController(gameObject: GameObject) : Component(gameObject) {
     private data class AnimationState(
@@ -85,12 +87,12 @@ class AnimationController(gameObject: GameObject) : Component(gameObject) {
         val factor = (elapsed / frameTime).coerceIn(0f, 1f)
         val interp = when (default) {
             is Vec3 -> when (current.interpolation) {
-                1 -> Interpolation.LINEAR_VEC3
+                aiAnimInterpolation_Linear -> Interpolation.LINEAR_VEC3
                 else -> error("Unknown interpolation ${current.interpolation} for vec3")
             }
             is Quat -> when (current.interpolation) {
-                1 -> Interpolation.LINEAR_QUAT
-                2 -> Interpolation.SPHERICAL_LINEAR_QUAT
+                aiAnimInterpolation_Linear -> Interpolation.LINEAR_QUAT
+                aiAnimInterpolation_Spherical_Linear -> Interpolation.SPHERICAL_LINEAR_QUAT
                 else -> error("Unknown interpolation ${current.interpolation} for quat")
             }
             else -> error("Unknown type to interpolate keyframes for: ${current::class.simpleName}")

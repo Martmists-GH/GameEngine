@@ -102,22 +102,25 @@ void main() {
         const float scale = 0.05;
         if (u_DebugSettings.useRayMarchDisplacement) {
             // FIXME: This looks like shit atm
-            const int maxLayers = 64;
-            float numLayers = mix(maxLayers, 4, abs(dot(vec3(0.0, 0.0, 1.0), tanV)));
+            const int maxLayers = 32;
+            float numLayers = mix(maxLayers, 8, abs(dot(vec3(0.0, 0.0, 1.0), tanV)));
             float layerDepth = 1.0 / numLayers;
             float currentLayerDepth = 0.0;
 
+            if (tanV.z <= 0.0)
+                discard;
+
             // P is the view direction in tangent space
-            vec2 P = tanV.xy / max(tanV.z, 0.1) * scale;
+            vec2 P = tanV.xy * scale;
             vec2 deltaUV = P / numLayers;
 
             vec2 currentUV = UV(u_Material.displacementUVIndex);
-            float currentDepthMapValue = texture(u_Material.displacementTexture, currentUV).r;
+            float currentDepthMapValue = 1 - texture(u_Material.displacementTexture, currentUV).r;
 
-            for(int i = 0; i < maxLayers; i++) {
+            for(int i = 0; i < numLayers; i++) {
                 if (currentLayerDepth >= currentDepthMapValue) break;
                 currentUV -= deltaUV;
-                currentDepthMapValue = texture(u_Material.displacementTexture, currentUV).r;
+                currentDepthMapValue = 1 - texture(u_Material.displacementTexture, currentUV).r;
                 currentLayerDepth += layerDepth;
             }
 

@@ -46,13 +46,21 @@ class Transform(gameObject: GameObject) : Serializable {
                 objectRef.get()
             }
         }
-    val children = mutableListOf<Transform>()
+    val children: Set<Transform>
+        field = mutableSetOf<Transform>()
     fun addChild(child: Transform) {
-        child.parent?.children?.remove(child)
+        child.parent?.removeChild(child)
         child.parent = this
         children.add(child)
     }
+    fun removeChild(child: Transform) {
+        if (child in children) {
+            child.parent = null
+            children.remove(child)
+        }
+    }
     fun addChild(child: GameObject) = addChild(child.transform)
+    fun removeChild(child: GameObject) = removeChild(child.transform)
 
     // TODO: Figure out if it's faster to access `worldXYZ` attributes
     fun modelMatrix(base: Mat4x4 = Mat4x4.Identity): Mat4x4 = (parent?.modelMatrix(base) ?: base).translate(translation).rotate(rotation).scale(scale)

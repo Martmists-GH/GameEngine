@@ -46,9 +46,10 @@ class GameObject(
     }
 
     fun addChild(child: GameObject) = transform.addChild(child)
+    fun removeChild(child: GameObject) = transform.removeChild(child)
 
     private fun delegateToComponents(fn: Component.() -> Unit) {
-        for (value in components.values) {
+        for (value in components.values.toSet()) {
             value.first.fn()
         }
     }

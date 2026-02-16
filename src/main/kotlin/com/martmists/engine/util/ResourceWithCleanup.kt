@@ -12,7 +12,7 @@ abstract class ResourceWithCleanup {
     }
 
     fun doCleanup() {
-        if (didClean.compareAndSet(expectedValue = true, newValue = true)) return
+        if (didClean.compareAndSet(expectedValue = false, newValue = true)) return
         cleanup()
     }
 

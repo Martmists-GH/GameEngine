@@ -85,7 +85,7 @@ class Shader(shaders: Map<Int, String>) : ResourceWithCleanup() {
         }
     }
 
-    fun setUniform(name: String, value: Array<Mat4x4>) = ifNotCached(name, value)  {
+    fun setUniform(name: String, value: Array<Mat4x4>) {
         val loc = glGetUniformLocation(id, name)
         MemoryStack.stackPush().use { stack ->
             val buffer = stack.mallocFloat(value.size * 16)

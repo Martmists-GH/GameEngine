@@ -19,7 +19,7 @@ value class Resource(val path: String) {
 
     fun exists(): Boolean {
         return when (source) {
-            "res" -> Thread.currentThread().contextClassLoader.getResource(pathComponent) == null
+            "res" -> Thread.currentThread().contextClassLoader.getResource(pathComponent) != null
             "" -> File(path).exists()
             else -> error("Unknown resource type: $source")
         }
@@ -58,7 +58,7 @@ value class Resource(val path: String) {
                     }
                 }
 
-                Resource(resPath + childPath.removePrefix("/"))
+                Resource(resPath)
             }
             "" -> Resource(File(path).resolve(childPath).path)
             else -> error("Unknown resource type: $source")

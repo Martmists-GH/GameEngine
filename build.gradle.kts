@@ -36,6 +36,9 @@ dependencies {
 kotlin {
     jvmToolchain(23)
     compilerOptions {
-        freeCompilerArgs.add("-Xexplicit-backing-fields")
+        freeCompilerArgs.addAll(
+            "-Xexplicit-backing-fields",
+            "-Xcontext-parameters"
+        )
     }
 }
