@@ -1,0 +1,12 @@
+### IDE
+.idea/
+*.iml
+
+### Gradle
+build/
+.gradle/
+.kotlin/
+gradle/wrapper/gradle-wrapper.jar
+
+### Miscellaneous
+imgui.ini
