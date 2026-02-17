@@ -18,6 +18,10 @@ class GLVertexArray : ResourceWithCleanup() {
         glBindVertexArray(id)
     }
 
+    fun unbind() {
+        glBindVertexArray(0)
+    }
+
     fun attrib(num: Int, stride: Int = this.stride, loc: Int = this.attrib++, offset: Int = this.offset, type: Int = GL_FLOAT, normalized: Boolean = false, divisor: Int = 0) {
         glEnableVertexAttribArray(loc)
         when (type) {

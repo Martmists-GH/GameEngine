@@ -22,6 +22,7 @@ abstract class Mesh<T>(
         vbo.bind()
         ebo?.bind()
         v.setupAttributes()
+        v.unbind()
         v
     }
 
@@ -63,6 +64,7 @@ abstract class Mesh<T>(
         } else {
             glDrawElementsInstanced(drawMode, vertexCount, GL_UNSIGNED_INT, 0, transforms.size)
         }
+        vao.unbind()
     }
 
     override fun toString(): String {

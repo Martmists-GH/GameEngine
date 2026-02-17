@@ -31,6 +31,7 @@ object WireframeRenderPipeline : RenderPipeline {
         override fun GLVertexArray.setupAttributes() {
             attrib(3)  // aPos
             attrib(3)  // aColor
+            ivbo(2)
         }
 
         override fun stride() = 6 * 4
@@ -164,6 +165,39 @@ object WireframeRenderPipeline : RenderPipeline {
         }
     }
 
+    // === Quad Wireframe ===
+
+    private object WireframeMesh : Mesh<Color>("Quad", floatArrayOf(
+        0f, 0f, 0f,
+        0f, 1f, 0f,
+        1f, 0f, 0f,
+        1f, 1f, 0f,
+    ), indices = intArrayOf(0, 1, 2, 1, 3, 2)) {
+        private val colorVbo = GLBuffer()
+
+        override fun bindData(data: List<Color>) {
+            val colorBuffer = MemoryUtil.memAllocFloat(data.size * 3)
+            data.forEach {
+                colorBuffer.put(it.r)
+                colorBuffer.put(it.g)
+                colorBuffer.put(it.b)
+            }
+            colorBuffer.flip()
+            colorVbo.setData(colorBuffer, usage = GL_DYNAMIC_DRAW)
+            MemoryUtil.memFree(colorBuffer)
+        }
+
+        override fun GLVertexArray.setupAttributes() {
+            attrib(3)
+            colorVbo.bind()
+            resetOffset()
+            attrib(3, divisor = 1)
+            ivbo(2)
+        }
+
+        override fun stride() = 3 * 4
+    }
+
     private val meshWrappersCache = WeakHashMap<ModelMesh, MeshWrapper>()
 
     class BatchEntry(
@@ -185,7 +219,7 @@ object WireframeRenderPipeline : RenderPipeline {
         glDepthMask(true)
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        var shader = BuiltinShaders.wireframeAxes
+        var shader = BuiltinShaders.wireframeSimple
 
         shader.bind()
         shader.setUniform("u_View", camera.viewMatrix)
@@ -198,7 +232,7 @@ object WireframeRenderPipeline : RenderPipeline {
         val spotLights = scene.objects.filter { it.hasComponent<SpotLight>() }
 
         if (directionalLights.isNotEmpty()) {
-            shader = BuiltinShaders.wireframeLightsDirectional
+            shader = BuiltinShaders.wireframeSimple
             shader.bind()
             shader.setUniform("u_View", camera.viewMatrix)
             shader.setUniform("u_Proj", camera.projectionMatrix)
@@ -215,6 +249,19 @@ object WireframeRenderPipeline : RenderPipeline {
             // TODO
         }
 
+        // TODO: Instanced rendering
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        shader = BuiltinShaders.wireframeSimple
+        shader.bind()
+        shader.setUniform("u_View", camera.viewMatrix)
+        shader.setUniform("u_Proj", camera.projectionMatrix)
+        for (obj in scene.objects) {
+            if (obj.hasComponent<SpriteRenderer>()) {
+                WireframeMesh.render(listOf(obj.transform.modelMatrix()), listOf(obj.meshColor()))
+            }
+        }
+        shader.unbind()
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         shader = BuiltinShaders.wireframeMesh
         shader.bind()
@@ -223,6 +270,7 @@ object WireframeRenderPipeline : RenderPipeline {
 
         val renderData = mutableMapOf<ModelMesh, MutableList<BatchEntry>>()
 
+        // TODO: Also collect nested objects
         for (go in scene.objects) {
             if (!go.hasComponent<ModelRenderer>()) continue
             val mr = go.getComponent<ModelRenderer>()

@@ -30,7 +30,7 @@ class ModelMesh(
     override fun bindData(data: List<Array<Mat4x4>>) {
         if (data.isNotEmpty()) {
             val maxBones = 200
-            val boneBuffer = MemoryUtil.memCallocFloat(data.size * maxBones * 16)
+            val boneBuffer = MemoryUtil.memAllocFloat(data.size * maxBones * 16)
             for (instanceIdx in data.indices) {
                 val matrices = data[instanceIdx]
                 val here = boneBuffer.position()

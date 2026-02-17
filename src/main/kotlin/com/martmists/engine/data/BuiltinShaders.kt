@@ -6,21 +6,23 @@ import com.martmists.engine.util.ResourceLoader
 import com.martmists.engine.util.contextLazy
 
 object BuiltinShaders {
+
     val default by contextLazy {
         Shader(
             ResourceLoader.loadTextFile(Resource("res:shaders/default.vert.glsl")),
             ResourceLoader.loadTextFile(Resource("res:shaders/default.frag.glsl")),
         )
     }
-    val wireframeAxes by contextLazy {
+    val texturedQuad by contextLazy {
         Shader(
-            ResourceLoader.loadTextFile(Resource("res:shaders/wireframe_axes.vert.glsl")),
-            ResourceLoader.loadTextFile(Resource("res:shaders/wireframe.frag.glsl")),
+            ResourceLoader.loadTextFile(Resource("res:shaders/textured_quad.vert.glsl")),
+            ResourceLoader.loadTextFile(Resource("res:shaders/textured_quad.frag.glsl")),
         )
     }
-    val wireframeLightsDirectional by contextLazy {
+
+    val wireframeSimple by contextLazy {
         Shader(
-            ResourceLoader.loadTextFile(Resource("res:shaders/wireframe_lights_directional.vert.glsl")),
+            ResourceLoader.loadTextFile(Resource("res:shaders/wireframe_simple.vert.glsl")),
             ResourceLoader.loadTextFile(Resource("res:shaders/wireframe.frag.glsl")),
         )
     }

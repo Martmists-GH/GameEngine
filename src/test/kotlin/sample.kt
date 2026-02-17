@@ -5,12 +5,15 @@ import com.martmists.engine.component.CameraController
 import com.martmists.engine.component.DirectionalLight
 import com.martmists.engine.component.ImguiRenderer
 import com.martmists.engine.component.ModelRenderer
+import com.martmists.engine.component.SpriteRenderer
 import com.martmists.engine.math.Quat
+import com.martmists.engine.math.Vec2i
 import com.martmists.engine.math.Vec3
 import com.martmists.engine.render.DefaultRenderPipeline
 import com.martmists.engine.render.WireframeRenderPipeline
 import com.martmists.engine.scene.GameObject
 import com.martmists.engine.scene.Scene
+import com.martmists.engine.sprite.Sprite
 import com.martmists.engine.util.Resource
 import com.martmists.engine.util.ResourceLoader
 import imgui.ImGui
@@ -39,12 +42,21 @@ fun main() {
 
     // Model I used for testing: https://sketchfab.com/3d-models/substance-material-darkmetal-panels-c7a4150166554fc194e9a0cc500af1d2
     val testModel = ResourceLoader.loadModel(Resource("/home/mart/Downloads/substance_material_darkmetal_panels.glb"))
+    val testSprite = Sprite(Resource("/home/mart/Documents/test_sprite.png"), Vec2i(64, 16), 4)
 
     val obj = GameObject("Model")
     obj.addComponent<ModelRenderer>().apply {
         model = testModel.instantiate()
     }
     obj.transform.scale *= 0.2f
+
+    val obj2 = GameObject("Sprite")
+    obj2.addComponent<SpriteRenderer>().apply {
+        sprite = testSprite
+        frame = 0
+    }
+    obj2.transform.scale = Vec3(2f, 2f, 2f)
+    obj2.transform.translation = Vec3(2f, 0f, 0f)
 
     val sun = GameObject("Sun")
     sun.addComponent<DirectionalLight>().apply {
@@ -65,6 +77,7 @@ fun main() {
         val currentRenderer = ImInt(0)
         val currentCamSpeed = floatArrayOf(camera.getComponent<CameraController>().speed)
         val currentTime = floatArrayOf(sun.transform.rotation.toEuler().x)
+        val currentFrame = intArrayOf(0)
 
         renderCallback = {
             if (ImGui.combo("Renderer", currentRenderer, arrayOf("Default", "Wireframe"))) {
@@ -73,6 +86,10 @@ fun main() {
                 } else {
                     win.viewport.pipeline = WireframeRenderPipeline
                 }
+            }
+
+            if (ImGui.sliderInt("Sprite Frame", currentFrame, 0, 3)) {
+                obj2.getComponent<SpriteRenderer>().frame = currentFrame[0]
             }
 
             if (ImGui.sliderFloat("Camera Speed", currentCamSpeed, 0.1f, 5f)) {
@@ -118,6 +135,7 @@ fun main() {
 
     scene.addObject(imgui)
     scene.addObject(obj)
+    scene.addObject(obj2)
     scene.addObject(sun)
     scene.addObject(camera)
 

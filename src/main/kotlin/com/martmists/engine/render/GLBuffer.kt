@@ -2,6 +2,7 @@ package com.martmists.engine.render
 
 import com.martmists.engine.util.ResourceWithCleanup
 import org.lwjgl.opengl.GL46.*
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
@@ -41,6 +42,11 @@ class GLBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithCleanup() 
     }
 
     fun setData(data: IntBuffer, usage: Int = GL_STATIC_DRAW, target: Int = type) {
+        bind(target)
+        glBufferData(target, data, usage)
+    }
+
+    fun setData(data: ByteBuffer, usage: Int = GL_STATIC_DRAW, target: Int = type) {
         bind(target)
         glBufferData(target, data, usage)
     }

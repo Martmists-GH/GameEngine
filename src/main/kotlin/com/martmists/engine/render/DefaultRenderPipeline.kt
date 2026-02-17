@@ -2,14 +2,19 @@ package com.martmists.engine.render
 
 import com.martmists.engine.scene.Viewport
 import com.martmists.engine.component.*
+import com.martmists.engine.data.BuiltinShaders
+import com.martmists.engine.ext.putVec2
 import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Vec3
 import com.martmists.engine.model.Material
 import com.martmists.engine.model.ModelMesh
 import com.martmists.engine.model.Model
 import com.martmists.engine.model.ModelPartInstance
+import com.martmists.engine.sprite.SpriteAtlas
+import com.martmists.engine.sprite.SpriteAtlasManager
 import com.martmists.engine.util.ImGuiRenderUtil
 import org.lwjgl.opengl.GL46.*
+import org.lwjgl.system.MemoryUtil
 
 object DefaultRenderPipeline : RenderPipeline {
     private data class BatchInfo(
@@ -31,6 +36,62 @@ object DefaultRenderPipeline : RenderPipeline {
         var renderNormals = false
     }
 
+    private class SpriteInfo(
+        val transform: Mat4x4,
+        val entry: SpriteAtlas.Entry,
+        val frame: Int,
+    )
+
+    private object SpriteMesh : Mesh<SpriteInfo>("Sprite", floatArrayOf(
+        0f, 0f,
+        0f, 1f,
+        1f, 0f,
+        1f, 1f,
+    ), indices = intArrayOf(0, 1, 2, 1, 3, 2)) {
+        val spriteDataVbo = GLBuffer()
+
+        override fun bindData(data: List<SpriteInfo>) {
+            val buffer = MemoryUtil.memAlloc(data.size * 4 * 4)
+            for (si in data) {
+                buffer.putVec2(si.entry.uvOffset(si.frame))
+                buffer.putVec2(si.entry.uvSize())
+            }
+            buffer.flip()
+            spriteDataVbo.setData(buffer, usage = GL_DYNAMIC_DRAW)
+            MemoryUtil.memFree(buffer)
+        }
+
+        override fun GLVertexArray.setupAttributes() {
+            attrib(2)  // aPos
+
+            spriteDataVbo.bind()
+            resetOffset()
+            stride = (2 + 2) * 4
+            attrib(2, divisor = 1)  // aUVOffset
+            attrib(2, divisor = 1)  // aUVScale
+
+            ivbo(3)
+        }
+
+        override fun stride() = 2 * 4
+    }
+
+    private class Sprite9Mesh : Mesh<SpriteInfo>("Sprite (9-Slice)", floatArrayOf(
+        0f, 0f, 0f,
+        0f, 0f, 0f,
+        0f, 0f, 0f,
+        0f, 0f, 0f,
+    )) {
+        override fun GLVertexArray.setupAttributes() {
+            TODO("Not yet implemented")
+        }
+
+        override fun stride(): Int {
+            TODO("Not yet implemented")
+        }
+
+    }
+
     override fun render(viewport: Viewport, buffer: Framebuffer) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -49,9 +110,12 @@ object DefaultRenderPipeline : RenderPipeline {
             val pointLights = scene.objects.filter { it.hasComponent<PointLight>() }.map { it.getComponent<PointLight>() }
             val spotLights = scene.objects.filter { it.hasComponent<SpotLight>() }.map { it.getComponent<SpotLight>() }
 
-            val batches = mutableMapOf<BatchInfo, MutableList<BatchEntry>>()
+            val modelBatches = mutableMapOf<BatchInfo, MutableList<BatchEntry>>()
             val modelInfo = mutableMapOf<BatchInfo, Model>()
+            val spriteBatches = mutableMapOf<SpriteAtlas, MutableList<SpriteInfo>>()
+            val sprite9Batches = mutableMapOf<SpriteAtlas, MutableList<SpriteInfo>>()
 
+            // TODO: Also collect nested objects
             for (go in scene.objects) {
                 if (go.hasComponent<ModelRenderer>()) {
                     val mr = go.getComponent<ModelRenderer>()
@@ -63,7 +127,7 @@ object DefaultRenderPipeline : RenderPipeline {
                         val currentTransform = if (boneMatrices != null) rootTransform else modelTransform * part.transform
                         for (geom in part.partRef.geometries) {
                             val info = BatchInfo(geom.mesh, geom.material, modelInst.model.makeShader(), boneMatrices != null)
-                            batches.getOrPut(info, ::mutableListOf).add(BatchEntry(currentTransform, boneMatrices))
+                            modelBatches.getOrPut(info, ::mutableListOf).add(BatchEntry(currentTransform, boneMatrices))
                             modelInfo.getOrPut(info) { modelInst.model }
                         }
                         for (child in part.children) {
@@ -72,9 +136,21 @@ object DefaultRenderPipeline : RenderPipeline {
                     }
                     collectParts(modelInst.root, rootTransform)
                 }
+
+                if (go.hasComponent<SpriteRenderer>()) {
+                    val sr = go.getComponent<SpriteRenderer>()
+                    val sprite = sr.sprite ?: continue
+                    val map = if (sprite.is9Slice) sprite9Batches else spriteBatches
+                    val entry = SpriteAtlasManager.registerSprite(sprite)
+                    map.getOrPut(entry.atlas, ::mutableListOf).add(SpriteInfo(
+                        go.transform.modelMatrix(),
+                        entry,
+                        sr.frame,
+                    ))
+                }
             }
 
-            for ((info, batch) in batches.entries) {
+            for ((info, batch) in modelBatches.entries) {
                 val (mesh, mat, shader) = info
 
                 shader.bind()
@@ -163,6 +239,17 @@ object DefaultRenderPipeline : RenderPipeline {
 
                 shader.unbind()
             }
+
+            val shader = BuiltinShaders.texturedQuad
+            shader.bind()
+            shader.setUniform("u_View", camera.viewMatrix)
+            shader.setUniform("u_Proj", camera.projectionMatrix)
+            shader.setUniform("u_TextureAtlas", 0)
+            for ((atlas, sprites) in spriteBatches) {
+                atlas.texture.bind(0)
+                SpriteMesh.render(sprites.map(SpriteInfo::transform), sprites)
+            }
+            shader.unbind()
         }
 
         val imguiObjects = scene.objects.filter { it.hasComponent<ImguiRenderer>() }
