@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL46.*
 class SpriteAtlas(
     val size: Vec2i = Vec2i(2048, 2048),
 ) {
-    private class PositionInfo(
+    internal class PositionInfo(
         val size: Vec2i,
         val offset: Vec2i,
     ) {
@@ -21,7 +21,7 @@ class SpriteAtlas(
         }
     }
 
-    private val spriteMap = mutableMapOf<Sprite, PositionInfo>()
+    internal val spriteMap = mutableMapOf<Sprite, PositionInfo>()
     internal val texture = TextureHandle(GL_NEAREST, GL_NEAREST).apply {
         setEmpty(size.x, size.y)
     }

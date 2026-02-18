@@ -76,22 +76,6 @@ object DefaultRenderPipeline : RenderPipeline {
         override fun stride() = 2 * 4
     }
 
-    private class Sprite9Mesh : Mesh<SpriteInfo>("Sprite (9-Slice)", floatArrayOf(
-        0f, 0f, 0f,
-        0f, 0f, 0f,
-        0f, 0f, 0f,
-        0f, 0f, 0f,
-    )) {
-        override fun GLVertexArray.setupAttributes() {
-            TODO("Not yet implemented")
-        }
-
-        override fun stride(): Int {
-            TODO("Not yet implemented")
-        }
-
-    }
-
     override fun render(viewport: Viewport, buffer: Framebuffer) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -140,13 +124,19 @@ object DefaultRenderPipeline : RenderPipeline {
                 if (go.hasComponent<SpriteRenderer>()) {
                     val sr = go.getComponent<SpriteRenderer>()
                     val sprite = sr.sprite ?: continue
+                    // TODO: Figure out how to stretch/shrink 9-slice
                     val map = if (sprite.is9Slice) sprite9Batches else spriteBatches
                     val entry = SpriteAtlasManager.registerSprite(sprite)
-                    map.getOrPut(entry.atlas, ::mutableListOf).add(SpriteInfo(
-                        go.transform.modelMatrix(),
-                        entry,
-                        sr.frame,
-                    ))
+                    val items = map.getOrPut(entry.atlas, ::mutableListOf)
+                    if (sprite.is9Slice) {
+                        // TODO
+                    } else {
+                        items.add(SpriteInfo(
+                            go.transform.modelMatrix(),
+                            entry,
+                            sr.frame,
+                        ))
+                    }
                 }
             }
 

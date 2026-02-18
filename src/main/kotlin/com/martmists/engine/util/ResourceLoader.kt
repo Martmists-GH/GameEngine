@@ -6,6 +6,7 @@ import com.martmists.engine.animation.Keyframe
 import com.martmists.engine.math.Color
 import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Quat
+import com.martmists.engine.math.Vec2i
 import com.martmists.engine.math.Vec3
 import com.martmists.engine.model.Geometry
 import com.martmists.engine.model.Material
@@ -14,6 +15,7 @@ import com.martmists.engine.model.Model
 import com.martmists.engine.model.ModelPart
 import com.martmists.engine.render.Shader
 import com.martmists.engine.render.TextureHandle
+import com.martmists.engine.sprite.Sprite
 import org.joml.Matrix4f
 import org.lwjgl.PointerBuffer
 import org.lwjgl.assimp.*
@@ -25,6 +27,7 @@ import java.nio.ByteBuffer
 object ResourceLoader {
     private val modelCache = mutableMapOf<String, Model>()
     private val textureCache = mutableMapOf<String, TextureHandle?>()
+    private val spriteCache = mutableMapOf<String, Sprite?>()
 
     private val MODEL_FLAGS = arrayOf(
         aiProcess_CalcTangentSpace,
@@ -401,6 +404,27 @@ object ResourceLoader {
 
     fun loadTextFile(resource: Resource): String {
         return resource.readAllBytes().decodeToString()
+    }
+
+    // TODO: Json definitions for sprites? What about sprite maps?
+    fun loadSprite(resource: Resource, numFrames: Int = 1): Sprite? {
+        return spriteCache.getOrPut(resource.absolutePath) {
+            val bytes = resource.readAllBytes()
+            val buffer = MemoryUtil.memAlloc(bytes.size)
+
+            try {
+                buffer.put(bytes)
+                buffer.flip()
+                val width = IntArray(1)
+                val height = IntArray(1)
+                val channels = IntArray(1)
+                val pixelData = stbi_load_from_memory(buffer, width, height, channels, 4) ?: return null.also { println("Failed to load Sprite from memory") }
+                stbi_image_free(pixelData)
+                Sprite(resource, Vec2i(width[0], height[0]), numFrames)
+            } finally {
+                MemoryUtil.memFree(buffer)
+            }
+        }
     }
 }
 
