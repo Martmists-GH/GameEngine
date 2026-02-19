@@ -5,6 +5,7 @@ import com.martmists.engine.component.*
 import com.martmists.engine.data.BuiltinShaders
 import com.martmists.engine.math.Color
 import com.martmists.engine.math.Mat4x4
+import com.martmists.engine.math.Vec3
 import com.martmists.engine.model.ModelMesh
 import com.martmists.engine.model.ModelPartInstance
 import com.martmists.engine.scene.GameObject
@@ -250,6 +251,7 @@ object WireframeRenderPipeline : RenderPipeline {
         }
 
         // TODO: Instanced rendering
+        // TODO: Multiple quads for 9-sliced sprites
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         shader = BuiltinShaders.wireframeSimple
         shader.bind()
@@ -257,7 +259,9 @@ object WireframeRenderPipeline : RenderPipeline {
         shader.setUniform("u_Proj", camera.projectionMatrix)
         for (obj in scene.objects) {
             if (obj.hasComponent<SpriteRenderer>()) {
-                WireframeMesh.render(listOf(obj.transform.modelMatrix()), listOf(obj.meshColor()))
+                val sr = obj.getComponent<SpriteRenderer>()
+                val sprite = sr.sprite ?: continue
+                WireframeMesh.render(listOf(obj.transform.modelMatrix().scale(Vec3(sr.stretch.x * sprite.aspectRatio, sr.stretch.y, 1f))), listOf(obj.meshColor()))
             }
         }
         shader.unbind()

@@ -27,6 +27,7 @@ value class Color(val joml: Vector4fc) {
     companion object {
         val White = Color(1f, 1f, 1f)
         val Black = Color(0f, 0f, 0f)
+        val Transparent = Color(0f, 0f, 0f, 0f)
 
         fun fromHSV(h: Float, s: Float, v: Float, alpha: Float = 1f): Color {
             val c = v * s

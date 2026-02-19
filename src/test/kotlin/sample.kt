@@ -43,7 +43,8 @@ fun main() {
 
     // Model I used for testing: https://sketchfab.com/3d-models/substance-material-darkmetal-panels-c7a4150166554fc194e9a0cc500af1d2
     val testModel = ResourceLoader.loadModel(Resource("/home/mart/Downloads/substance_material_darkmetal_panels.glb"))
-    val testSprite = ResourceLoader.loadSprite(Resource("/home/mart/Documents/test_sprite.png"), 4)
+    val testSpritesheet = ResourceLoader.loadSpritesheet(Resource("/home/mart/Documents/test_sprite.png"))!!
+    val testSprite = Sprite(testSpritesheet, Vec2i(64, 16), Vec2i(0, 0), Vec2i(16, 0) to Vec2i(48, 16))
 
     val obj = GameObject("Model")
     obj.addComponent<ModelRenderer>().apply {
@@ -54,7 +55,7 @@ fun main() {
     val obj2 = GameObject("Sprite")
     obj2.addComponent<SpriteRenderer>().apply {
         sprite = testSprite
-        frame = 0
+        stretch = Vec2(1.5f, 1f)
     }
     obj2.transform.scale *= 2f
     obj2.transform.translation = Vec3(2f, 0f, 0f)
@@ -78,7 +79,6 @@ fun main() {
         val currentRenderer = ImInt(0)
         val currentCamSpeed = floatArrayOf(camera.getComponent<CameraController>().speed)
         val currentTime = floatArrayOf(sun.transform.rotation.toEuler().x)
-        val currentFrame = intArrayOf(0)
 
         renderCallback = {
             if (ImGui.combo("Renderer", currentRenderer, arrayOf("Default", "Wireframe"))) {
@@ -87,10 +87,6 @@ fun main() {
                 } else {
                     win.viewport.pipeline = WireframeRenderPipeline
                 }
-            }
-
-            if (ImGui.sliderInt("Sprite Frame", currentFrame, 0, 3)) {
-                obj2.getComponent<SpriteRenderer>().frame = currentFrame[0]
             }
 
             if (ImGui.sliderFloat("Camera Speed", currentCamSpeed, 0.1f, 5f)) {

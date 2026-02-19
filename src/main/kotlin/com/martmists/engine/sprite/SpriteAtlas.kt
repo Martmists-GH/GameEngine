@@ -1,5 +1,6 @@
 package com.martmists.engine.sprite
 
+import com.martmists.engine.math.Color
 import com.martmists.engine.math.Vec2
 import com.martmists.engine.math.Vec2i
 import com.martmists.engine.render.TextureHandle
@@ -21,27 +22,36 @@ class SpriteAtlas(
         }
     }
 
-    internal val spriteMap = mutableMapOf<Sprite, PositionInfo>()
+    internal val spritesheetMap = mutableMapOf<Spritesheet, PositionInfo>()
+    internal val spriteMap = mutableMapOf<Sprite, Entry>()
     internal val texture = TextureHandle(GL_NEAREST, GL_NEAREST).apply {
-        setEmpty(size.x, size.y)
+        setEmpty(size.x, size.y, Color.Transparent)
     }
 
-    class Entry(
+    data class Entry(
         val atlas: SpriteAtlas,
         val sprite: Sprite,
         val size: Vec2i,
         val offset: Vec2i,
     ) {
-        fun uvOffset(frame: Int): Vec2 {
+        fun uvOffset(): Vec2 {
             return Vec2(
-                (offset.x.toFloat() + (frame.toFloat() / sprite.numFrames) * size.x) / atlas.size.x,
-                offset.y.toFloat() / atlas.size.y,
+                (offset.x + sprite.offset.x).toFloat() / atlas.size.x,
+                (offset.y + sprite.offset.y).toFloat() / atlas.size.y,
             )
         }
         fun uvSize(): Vec2 {
             return Vec2(
-                size.x.toFloat() / atlas.size.x / sprite.numFrames,
+                size.x.toFloat() / atlas.size.x,
                 size.y.toFloat() / atlas.size.y,
+            )
+        }
+        fun slice(xRange: Vec2i, yRange: Vec2i): Entry {
+            return Entry(
+                atlas,
+                sprite,
+                Vec2i(xRange.y - xRange.x, yRange.y - yRange.x),
+                offset + Vec2i(xRange.x, yRange.x)
             )
         }
     }
@@ -61,23 +71,26 @@ class SpriteAtlas(
 
     private fun gridAlignedPosition(size: Vec2i): PositionInfo? {
         val aligned = Vec2i(nextPow2(size.x), nextPow2(size.y))
-        val validPos = gridPositions(aligned).firstOrNull { offset -> spriteMap.values.none {
+        val validPos = gridPositions(aligned).firstOrNull { offset -> spritesheetMap.values.none {
             it.overlaps(offset, aligned)
         } } ?: return null
         return PositionInfo(size, validPos)
     }
 
     fun addSprite(sprite: Sprite): Entry? {
-        val data = spriteMap.getOrPut(sprite) {
-            val pos = gridAlignedPosition(sprite.size) ?: return null
-            val image = ResourceLoader.loadImage(sprite.resource, true) ?: return null
-            glCopyImageSubData(
-                image.id, GL_TEXTURE_2D, 0, 0, 0, 0,
-                texture.id, GL_TEXTURE_2D, pos.offset.x, pos.offset.y, 0, 0,
-                sprite.size.x, sprite.size.y, 1
-            )
-            pos
+         return spriteMap.getOrPut(sprite) {
+            val sheetPos = spritesheetMap.getOrPut(sprite.spritesheet) {
+                val pos = gridAlignedPosition(sprite.spritesheet.size) ?: return null
+                val image = ResourceLoader.loadImage(sprite.spritesheet.resource, true) ?: return null
+                glCopyImageSubData(
+                    image.id, GL_TEXTURE_2D, 0, 0, 0, 0,
+                    texture.id, GL_TEXTURE_2D, pos.offset.x, pos.offset.y, 0, 0,
+                    sprite.size.x, sprite.size.y, 1
+                )
+                pos
+            }
+
+            Entry(this, sprite, sprite.size, sheetPos.offset + sprite.offset)
         }
-        return Entry(this, sprite, data.size, data.offset)
     }
 }

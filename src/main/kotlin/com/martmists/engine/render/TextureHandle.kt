@@ -1,5 +1,6 @@
 package com.martmists.engine.render
 
+import com.martmists.engine.math.Color
 import com.martmists.engine.util.ResourceWithCleanup
 import org.lwjgl.opengl.GL46.*
 import java.nio.ByteBuffer
@@ -41,7 +42,7 @@ class TextureHandle private constructor(val id: Int, minFilter: Int, magFilter: 
         unbind()
     }
 
-    fun setEmpty(width: Int, height: Int) {
+    fun setEmpty(width: Int, height: Int, fill: Color = Color.Black) {
         this.width = width
         this.height = height
 
@@ -57,6 +58,7 @@ class TextureHandle private constructor(val id: Int, minFilter: Int, magFilter: 
             GL_UNSIGNED_BYTE,
             0
         )
+        glClearTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, floatArrayOf(fill.r, fill.g, fill.b, fill.a))
         unbind()
     }
 

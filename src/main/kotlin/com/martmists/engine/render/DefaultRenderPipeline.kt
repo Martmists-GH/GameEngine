@@ -5,6 +5,7 @@ import com.martmists.engine.component.*
 import com.martmists.engine.data.BuiltinShaders
 import com.martmists.engine.ext.putVec2
 import com.martmists.engine.math.Mat4x4
+import com.martmists.engine.math.Vec2i
 import com.martmists.engine.math.Vec3
 import com.martmists.engine.model.Material
 import com.martmists.engine.model.ModelMesh
@@ -39,7 +40,6 @@ object DefaultRenderPipeline : RenderPipeline {
     private class SpriteInfo(
         val transform: Mat4x4,
         val entry: SpriteAtlas.Entry,
-        val frame: Int,
     )
 
     private object SpriteMesh : Mesh<SpriteInfo>("Sprite", floatArrayOf(
@@ -53,7 +53,7 @@ object DefaultRenderPipeline : RenderPipeline {
         override fun bindData(data: List<SpriteInfo>) {
             val buffer = MemoryUtil.memAlloc(data.size * 4 * 4)
             for (si in data) {
-                buffer.putVec2(si.entry.uvOffset(si.frame))
+                buffer.putVec2(si.entry.uvOffset())
                 buffer.putVec2(si.entry.uvSize())
             }
             buffer.flip()
@@ -97,7 +97,6 @@ object DefaultRenderPipeline : RenderPipeline {
             val modelBatches = mutableMapOf<BatchInfo, MutableList<BatchEntry>>()
             val modelInfo = mutableMapOf<BatchInfo, Model>()
             val spriteBatches = mutableMapOf<SpriteAtlas, MutableList<SpriteInfo>>()
-            val sprite9Batches = mutableMapOf<SpriteAtlas, MutableList<SpriteInfo>>()
 
             // TODO: Also collect nested objects
             for (go in scene.objects) {
@@ -124,17 +123,104 @@ object DefaultRenderPipeline : RenderPipeline {
                 if (go.hasComponent<SpriteRenderer>()) {
                     val sr = go.getComponent<SpriteRenderer>()
                     val sprite = sr.sprite ?: continue
-                    // TODO: Figure out how to stretch/shrink 9-slice
-                    val map = if (sprite.is9Slice) sprite9Batches else spriteBatches
                     val entry = SpriteAtlasManager.registerSprite(sprite)
-                    val items = map.getOrPut(entry.atlas, ::mutableListOf)
+                    val items = spriteBatches.getOrPut(entry.atlas, ::mutableListOf)
                     if (sprite.is9Slice) {
-                        // TODO
+                        val corners = sprite.offset9SliceCorners!!
+                        var xMul = 1f
+                        var yMul = 1f
+                        if (sprite.aspectRatio >= 1f) {
+                            xMul = sprite.aspectRatio
+                        } else {
+                            yMul = 1 / sprite.aspectRatio
+                        }
+
+                        val seg1X = corners.first.x.toFloat()
+                        val seg3X = sprite.size.x - corners.second.x.toFloat()
+                        val seg2Xa = (corners.second.x - corners.first.x).toFloat()
+                        val seg2X = sprite.size.x * sr.stretch.x - seg1X - seg3X
+                        val seg2XScale = seg2X / seg2Xa
+                        val seg1Y = corners.first.y.toFloat()
+                        val seg3Y = sprite.size.y - corners.second.y.toFloat()
+                        val seg2Ya = (corners.second.y - corners.first.y).toFloat()
+                        val seg2Y = sprite.size.y * sr.stretch.y - seg1Y - seg3Y
+                        val seg2YScale = seg2Y / seg2Ya
+
+                        for (i in 0 until 9) {
+                            val col = i % 3
+                            val row = i / 3
+
+                            var tr = go.transform.modelMatrix()
+
+                            val xRange = when (col) {
+                                0 -> Vec2i(0, corners.first.x)
+                                1 -> Vec2i(corners.first.x, corners.second.x)
+                                2 -> Vec2i(corners.second.x, sprite.size.x)
+                                else -> error("Never happens")
+                            }
+
+                            val yRange = when (row) {
+                                0 -> Vec2i(0, corners.first.y)
+                                1 -> Vec2i(corners.first.y, corners.second.y)
+                                2 -> Vec2i(corners.second.y, sprite.size.y)
+                                else -> error("Never happens")
+                            }
+
+                            if (xRange.x == xRange.y || yRange.x == yRange.y) {
+                                // one of the dimensions is 0, don't render
+                                continue
+                            }
+
+                            val deltaX = when (col) {
+                                0 -> 0f
+                                1 -> seg1X
+                                2 -> seg1X + seg2X
+                                else -> error("Never happens")
+                            }
+                            val deltaY = when (row) {
+                                0 -> seg3Y + seg2Y
+                                1 -> seg3Y
+                                2 -> 0f
+                                else -> error("Never happens")
+                            }
+                            val partAspectRatio = when (i) {
+                                0 -> seg1X / seg1Y
+                                1 -> seg2Xa / seg1Y
+                                2 -> seg3X / seg1Y
+                                3 -> seg1X / seg2Ya
+                                4 -> seg2Xa / seg2Ya
+                                5 -> seg3X / seg2Ya
+                                6 -> seg1X / seg3Y
+                                7 -> seg2Xa / seg3Y
+                                8 -> seg3X / seg3Y
+                                else -> error("Never happens")
+                            }
+                            var partXMul = 1f
+                            var partYMul = 1f
+                            if (partAspectRatio >= 1f) {
+                                partXMul = partAspectRatio
+                            } else {
+                                partYMul = 1f / partAspectRatio
+                            }
+
+                            tr = tr.translate(Vec3(deltaX * xMul / sprite.size.x, deltaY * yMul / sprite.size.y, 0f))
+
+                            if (col == 1) {
+                                tr = tr.scale(Vec3(seg2XScale * partXMul, 1f, 1f))
+                            }
+                            if (row == 1) {
+                                tr = tr.scale(Vec3(1f, seg2YScale * partYMul, 1f))
+                            }
+
+                            items.add(SpriteInfo(
+                                tr,
+                                entry.slice(xRange, yRange),
+                            ))
+                        }
                     } else {
                         items.add(SpriteInfo(
-                            go.transform.modelMatrix(),
+                            go.transform.modelMatrix().scale(Vec3(sr.stretch.x, sr.stretch.y, 1f)),
                             entry,
-                            sr.frame,
                         ))
                     }
                 }

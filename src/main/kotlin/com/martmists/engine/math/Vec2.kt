@@ -37,5 +37,6 @@ value class Vec2(val joml: Vector2fc) {
 
     companion object {
         val Zero = Vec2(0f)
+        val One = Vec2(1f)
     }
 }

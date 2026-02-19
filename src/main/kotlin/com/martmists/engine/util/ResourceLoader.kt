@@ -16,6 +16,7 @@ import com.martmists.engine.model.ModelPart
 import com.martmists.engine.render.Shader
 import com.martmists.engine.render.TextureHandle
 import com.martmists.engine.sprite.Sprite
+import com.martmists.engine.sprite.Spritesheet
 import org.joml.Matrix4f
 import org.lwjgl.PointerBuffer
 import org.lwjgl.assimp.*
@@ -27,7 +28,7 @@ import java.nio.ByteBuffer
 object ResourceLoader {
     private val modelCache = mutableMapOf<String, Model>()
     private val textureCache = mutableMapOf<String, TextureHandle?>()
-    private val spriteCache = mutableMapOf<String, Sprite?>()
+    private val spritesheetCache = mutableMapOf<String, Spritesheet?>()
 
     private val MODEL_FLAGS = arrayOf(
         aiProcess_CalcTangentSpace,
@@ -407,8 +408,8 @@ object ResourceLoader {
     }
 
     // TODO: Json definitions for sprites? What about sprite maps?
-    fun loadSprite(resource: Resource, numFrames: Int = 1): Sprite? {
-        return spriteCache.getOrPut(resource.absolutePath) {
+    fun loadSpritesheet(resource: Resource): Spritesheet? {
+        return spritesheetCache.getOrPut(resource.absolutePath) {
             val bytes = resource.readAllBytes()
             val buffer = MemoryUtil.memAlloc(bytes.size)
 
@@ -420,11 +421,10 @@ object ResourceLoader {
                 val channels = IntArray(1)
                 val pixelData = stbi_load_from_memory(buffer, width, height, channels, 4) ?: return null.also { println("Failed to load Sprite from memory") }
                 stbi_image_free(pixelData)
-                Sprite(resource, Vec2i(width[0], height[0]), numFrames)
+                Spritesheet(resource, Vec2i(width[0], height[0]))
             } finally {
                 MemoryUtil.memFree(buffer)
             }
         }
     }
 }
-
