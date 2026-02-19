@@ -357,7 +357,7 @@ object ResourceLoader {
         )
     }
 
-    fun AIMatrix4x4.toMat4x4(): Mat4x4 {
+    private fun AIMatrix4x4.toMat4x4(): Mat4x4 {
         return Mat4x4(Matrix4f(
             a1(), b1(), c1(), d1(),
             a2(), b2(), c2(), d2(),
@@ -366,7 +366,7 @@ object ResourceLoader {
         ))
     }
 
-    fun AINode.getTransformation(): Mat4x4 {
+    private fun AINode.getTransformation(): Mat4x4 {
         return mTransformation().toMat4x4()
     }
 
