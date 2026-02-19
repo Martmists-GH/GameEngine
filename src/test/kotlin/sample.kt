@@ -15,6 +15,7 @@ import com.martmists.engine.render.WireframeRenderPipeline
 import com.martmists.engine.scene.GameObject
 import com.martmists.engine.scene.Scene
 import com.martmists.engine.sprite.Sprite
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.Resource
 import com.martmists.engine.util.ResourceLoader
 import imgui.ImGui
@@ -155,6 +156,8 @@ fun main() {
         win.render()
 
         lastTime = now
+        GLGarbageCollector.clean()
+
         glfwPollEvents()
     }
 

@@ -3,10 +3,10 @@ package com.martmists.engine.render
 import com.martmists.engine.math.Color
 import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Vec3
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.intellij.lang.annotations.Language
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 import org.lwjgl.system.MemoryStack
 import kotlin.collections.iterator
@@ -36,6 +36,8 @@ class Shader(shaders: Map<Int, String>) : ResourceWithCleanup() {
     }
 
     init {
+        registerCleaner()
+
         val shaderList = mutableListOf<Int>()
 
         for ((type, source) in shaders) {
@@ -128,10 +130,7 @@ class Shader(shaders: Map<Int, String>) : ResourceWithCleanup() {
 
     private class ShaderCleaner(val ctx: Long, val id: Int) : Runnable {
         override fun run() {
-            val toRestore = glfwGetCurrentContext()
-            glfwMakeContextCurrent(ctx)
-            glDeleteProgram(id)
-            glfwMakeContextCurrent(toRestore)
+            GLGarbageCollector.markShader(ctx, id)
         }
     }
 }

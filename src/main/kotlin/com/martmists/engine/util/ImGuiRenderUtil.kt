@@ -1,5 +1,6 @@
 package com.martmists.engine.util
 
+import com.martmists.engine.util.ImGuiRenderUtil.ImguiObjects
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -18,22 +19,20 @@ object ImGuiRenderUtil {
         data.gl3.renderDrawData(ImGui.getDrawData())
     }
 
-    private val data by contextLazy {
-        ImguiObjects(
-            ImGuiImplGl3(),
-            ImGuiImplGlfw(),
-            ImGui.createContext(),
-        ).also {
-            check(it.glfw.init(glfwGetCurrentContext(), true))
-            check(it.gl3.init())
-        }
-    }
+    private val data by contextLazy(::ImguiObjects)
 
-    private class ImguiObjects(
-        val gl3: ImGuiImplGl3,
-        val glfw: ImGuiImplGlfw,
-        val context: ImGuiContext,
-    ) : ResourceWithCleanup() {
+    private class ImguiObjects : ResourceWithCleanup() {
+        val gl3 = ImGuiImplGl3()
+        val glfw = ImGuiImplGlfw()
+        val context: ImGuiContext = ImGui.createContext()
+
+        init {
+            registerCleaner()
+
+            check(glfw.init(glfwGetCurrentContext(), true))
+            check(gl3.init())
+        }
+
         override fun createCleaner(): Runnable = ImguiCleaner(glfwGetCurrentContext(), gl3, glfw, context)
 
         private class ImguiCleaner(val ctx: Long,
@@ -41,12 +40,11 @@ object ImGuiRenderUtil {
                                    val glfw: ImGuiImplGlfw,
                                    val context: ImGuiContext) : Runnable {
             override fun run() {
-                val toRestore = glfwGetCurrentContext()
-                glfwMakeContextCurrent(ctx)
-                ImGui.destroyContext(context)
-                gl3.shutdown()
-                glfw.shutdown()
-                glfwMakeContextCurrent(toRestore)
+                GLGarbageCollector.markCallback(ctx) {
+                    ImGui.destroyContext(context)
+                    gl3.shutdown()
+                    glfw.shutdown()
+                }
             }
         }
     }

@@ -1,9 +1,9 @@
 package com.martmists.engine.render
 
 import com.martmists.engine.math.Color
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 import java.nio.ByteBuffer
 
@@ -16,6 +16,8 @@ class TextureHandle private constructor(val id: Int, minFilter: Int, magFilter: 
         private set
 
     init {
+        registerCleaner()
+
         bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
@@ -68,10 +70,7 @@ class TextureHandle private constructor(val id: Int, minFilter: Int, magFilter: 
 
     private class TextureCleaner(val ctx: Long, val id: Int) : Runnable {
         override fun run() {
-            val toRestore = glfwGetCurrentContext()
-            glfwMakeContextCurrent(ctx)
-            glDeleteTextures(id)
-            glfwMakeContextCurrent(toRestore)
+            GLGarbageCollector.markTexture(ctx, id)
         }
     }
 

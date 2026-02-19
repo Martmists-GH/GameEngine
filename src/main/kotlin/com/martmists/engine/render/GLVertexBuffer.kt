@@ -1,8 +1,8 @@
 package com.martmists.engine.render
 
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -17,6 +17,10 @@ class GLVertexBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithClea
     }
 
     private val id = glGenBuffers()
+
+    init {
+        registerCleaner()
+    }
 
     fun bind(target: Int = type) {
         glBindBuffer(target, id)
@@ -59,10 +63,7 @@ class GLVertexBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithClea
 
     private class VBOCleaner(val ctx: Long, val id: Int) : Runnable {
         override fun run() {
-            val toRestore = glfwGetCurrentContext()
-            glfwMakeContextCurrent(ctx)
-            glDeleteBuffers(id)
-            glfwMakeContextCurrent(toRestore)
+            GLGarbageCollector.markVBO(ctx, id)
         }
     }
 }

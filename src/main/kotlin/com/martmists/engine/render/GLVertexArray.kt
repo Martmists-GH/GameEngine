@@ -1,12 +1,16 @@
 package com.martmists.engine.render
 
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 
 class GLVertexArray : ResourceWithCleanup() {
     private val id = glGenVertexArrays()
+
+    init {
+        registerCleaner()
+    }
 
     private var attrib = 0
     private var offset = 0
@@ -54,10 +58,7 @@ class GLVertexArray : ResourceWithCleanup() {
 
     private class VAOCleaner(val ctx: Long, val id: Int) : Runnable {
         override fun run() {
-            val toRestore = glfwGetCurrentContext()
-            glfwMakeContextCurrent(ctx)
-            glDeleteVertexArrays(id)
-            glfwMakeContextCurrent(toRestore)
+            GLGarbageCollector.markVAO(ctx, id)
         }
     }
 }

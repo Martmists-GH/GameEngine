@@ -1,8 +1,8 @@
 package com.martmists.engine.render
 
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 
 class Framebuffer(val width: Int, val height: Int) : ResourceWithCleanup() {
@@ -11,6 +11,8 @@ class Framebuffer(val width: Int, val height: Int) : ResourceWithCleanup() {
     private val rbo = glGenRenderbuffers()
 
     init {
+        registerCleaner()
+
         bind()
 
         texture.setEmpty(width, height)
@@ -51,11 +53,8 @@ class Framebuffer(val width: Int, val height: Int) : ResourceWithCleanup() {
 
     private class FBOCleaner(val ctx: Long, val id: Int, val rbo: Int) : Runnable {
         override fun run() {
-            val toRestore = glfwGetCurrentContext()
-            glfwMakeContextCurrent(ctx)
-            glDeleteFramebuffers(id)
-            glDeleteRenderbuffers(rbo)
-            glfwMakeContextCurrent(toRestore)
+            GLGarbageCollector.markFBO(ctx, id)
+            GLGarbageCollector.markRBO(ctx, rbo)
         }
     }
 }

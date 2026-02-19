@@ -2,6 +2,7 @@ package com.martmists.engine
 
 import com.martmists.engine.render.Framebuffer
 import com.martmists.engine.scene.Viewport
+import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.joml.Vector2i
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
@@ -31,6 +32,8 @@ class Window(initialWidth: Int, initialHeight: Int, title: String) : ResourceWit
             throw RuntimeException("Failed to create the GLFW window")
         }
 
+        registerCleaner()
+
         if (gHandle == NULL) {
             gHandle = handle
         }
@@ -52,7 +55,6 @@ class Window(initialWidth: Int, initialHeight: Int, title: String) : ResourceWit
             width = w
             height = h
             viewport.size = Vector2i(w, h)
-            framebuffer.cleanup()
             framebuffer = Framebuffer(w, h)
         }?.free()
 
@@ -89,14 +91,10 @@ class Window(initialWidth: Int, initialHeight: Int, title: String) : ResourceWit
 
     private class WindowCleaner(val ctx: Long) : Runnable {
         override fun run() {
-            val toRestore = glfwGetCurrentContext()
-            glfwMakeContextCurrent(ctx)
-            glfwFreeCallbacks(ctx)
-            glfwDestroyWindow(ctx)
+            GLGarbageCollector.markContext(ctx)
             if (gHandle == ctx) {
                 gHandle = NULL
             }
-            glfwMakeContextCurrent(toRestore)
         }
     }
 
