@@ -15,9 +15,9 @@ abstract class Mesh<T>(
     private val drawMode: Int = GL_TRIANGLES,
 ) {
     internal val vertexCount = indices?.size ?: (vertices.size / (stride() / 4))
-    internal val vbo = GLBuffer(vertices)
-    internal val ebo = indices?.let { GLBuffer(it, type = GL_ELEMENT_ARRAY_BUFFER) }
-    internal val ivbo = GLBuffer()
+    internal val vbo = GLVertexBuffer(vertices)
+    internal val ebo = indices?.let { GLVertexBuffer(it, type = GL_ELEMENT_ARRAY_BUFFER) }
+    internal val ivbo = GLVertexBuffer()
     private val vao by contextLazy {
         val v = GLVertexArray()
         v.bind()

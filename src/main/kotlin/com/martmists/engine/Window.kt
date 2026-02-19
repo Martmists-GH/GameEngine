@@ -85,10 +85,19 @@ class Window(initialWidth: Int, initialHeight: Int, title: String) : ResourceWit
         glfwSwapBuffers(handle)
     }
 
-    override fun cleanup() {
-        framebuffer.cleanup()
-        glfwFreeCallbacks(handle)
-        glfwDestroyWindow(handle)
+    override fun createCleaner(): Runnable = WindowCleaner(handle)
+
+    private class WindowCleaner(val ctx: Long) : Runnable {
+        override fun run() {
+            val toRestore = glfwGetCurrentContext()
+            glfwMakeContextCurrent(ctx)
+            glfwFreeCallbacks(ctx)
+            glfwDestroyWindow(ctx)
+            if (gHandle == ctx) {
+                gHandle = NULL
+            }
+            glfwMakeContextCurrent(toRestore)
+        }
     }
 
     companion object {

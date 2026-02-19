@@ -48,7 +48,7 @@ object DefaultRenderPipeline : RenderPipeline {
         1f, 0f,
         1f, 1f,
     ), indices = intArrayOf(0, 1, 2, 1, 3, 2)) {
-        val spriteDataVbo = GLBuffer()
+        val spriteDataVbo = GLVertexBuffer()
 
         override fun bindData(data: List<SpriteInfo>) {
             val buffer = MemoryUtil.memAlloc(data.size * 4 * 4)

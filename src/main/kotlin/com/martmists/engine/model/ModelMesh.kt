@@ -1,7 +1,7 @@
 package com.martmists.engine.model
 
 import com.martmists.engine.math.Mat4x4
-import com.martmists.engine.render.GLBuffer
+import com.martmists.engine.render.GLVertexBuffer
 import com.martmists.engine.render.GLVertexArray
 import com.martmists.engine.render.Mesh
 import org.lwjgl.opengl.GL46.*
@@ -14,9 +14,9 @@ class ModelMesh(
     boneIds: IntArray? = null,
     boneWeights: FloatArray? = null
 ) : Mesh<Array<Mat4x4>>(name, vertices, indices) {
-    internal val bvbo = boneIds?.let(::GLBuffer)
-    internal val bwvbo = boneWeights?.let(::GLBuffer)
-    internal val bssbo = boneIds?.let { GLBuffer(GL_SHADER_STORAGE_BUFFER) }
+    internal val bvbo = boneIds?.let(::GLVertexBuffer)
+    internal val bwvbo = boneWeights?.let(::GLVertexBuffer)
+    internal val bssbo = boneIds?.let { GLVertexBuffer(GL_SHADER_STORAGE_BUFFER) }
 
     init {
         require((boneIds == null) == (boneWeights == null)) {

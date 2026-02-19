@@ -2,6 +2,8 @@ package com.martmists.engine.render
 
 import com.martmists.engine.math.Color
 import com.martmists.engine.util.ResourceWithCleanup
+import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
+import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 import java.nio.ByteBuffer
 
@@ -62,8 +64,15 @@ class TextureHandle private constructor(val id: Int, minFilter: Int, magFilter: 
         unbind()
     }
 
-    override fun cleanup() {
-        glDeleteTextures(id)
+    override fun createCleaner(): Runnable = TextureCleaner(glfwGetCurrentContext(), id)
+
+    private class TextureCleaner(val ctx: Long, val id: Int) : Runnable {
+        override fun run() {
+            val toRestore = glfwGetCurrentContext()
+            glfwMakeContextCurrent(ctx)
+            glDeleteTextures(id)
+            glfwMakeContextCurrent(toRestore)
+        }
     }
 
     override fun toString(): String {

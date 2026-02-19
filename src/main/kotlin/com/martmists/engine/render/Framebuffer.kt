@@ -1,6 +1,8 @@
 package com.martmists.engine.render
 
 import com.martmists.engine.util.ResourceWithCleanup
+import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
+import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 
 class Framebuffer(val width: Int, val height: Int) : ResourceWithCleanup() {
@@ -45,8 +47,15 @@ class Framebuffer(val width: Int, val height: Int) : ResourceWithCleanup() {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
     }
 
-    override fun cleanup() {
-        glDeleteFramebuffers(id)
-        glDeleteRenderbuffers(rbo)
+    override fun createCleaner(): Runnable = FBOCleaner(glfwGetCurrentContext(), id, rbo)
+
+    private class FBOCleaner(val ctx: Long, val id: Int, val rbo: Int) : Runnable {
+        override fun run() {
+            val toRestore = glfwGetCurrentContext()
+            glfwMakeContextCurrent(ctx)
+            glDeleteFramebuffers(id)
+            glDeleteRenderbuffers(rbo)
+            glfwMakeContextCurrent(toRestore)
+        }
     }
 }

@@ -1,12 +1,14 @@
 package com.martmists.engine.render
 
 import com.martmists.engine.util.ResourceWithCleanup
+import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
+import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
-class GLBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithCleanup() {
+class GLVertexBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithCleanup() {
     constructor(data: FloatArray, usage: Int = GL_STATIC_DRAW, type: Int = GL_ARRAY_BUFFER) : this(type) {
         setData(data, usage, type)
     }
@@ -14,9 +16,7 @@ class GLBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithCleanup() 
         setData(data, usage, type)
     }
 
-    private val id = run {
-        glGenBuffers()
-    }
+    private val id = glGenBuffers()
 
     fun bind(target: Int = type) {
         glBindBuffer(target, id)
@@ -55,7 +55,14 @@ class GLBuffer(private val type: Int = GL_ARRAY_BUFFER) : ResourceWithCleanup() 
         return "GLBuffer(#$id)"
     }
 
-    override fun cleanup() {
-        glDeleteBuffers(id)
+    override fun createCleaner(): Runnable = VBOCleaner(glfwGetCurrentContext(), id)
+
+    private class VBOCleaner(val ctx: Long, val id: Int) : Runnable {
+        override fun run() {
+            val toRestore = glfwGetCurrentContext()
+            glfwMakeContextCurrent(ctx)
+            glDeleteBuffers(id)
+            glfwMakeContextCurrent(toRestore)
+        }
     }
 }

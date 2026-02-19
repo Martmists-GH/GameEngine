@@ -6,17 +6,11 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(ExperimentalAtomicApi::class)
 abstract class ResourceWithCleanup {
-    private val didClean = AtomicBoolean(false)
     init {
-        cleaner.register(this, this::doCleanup)
+        cleaner.register(this, createCleaner())
     }
 
-    fun doCleanup() {
-        if (didClean.compareAndSet(expectedValue = false, newValue = true)) return
-        cleanup()
-    }
-
-    abstract fun cleanup()
+    abstract fun createCleaner(): Runnable
 
     companion object {
         private val cleaner = Cleaner.create()

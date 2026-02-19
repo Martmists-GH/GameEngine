@@ -51,7 +51,7 @@ object WireframeRenderPipeline : RenderPipeline {
         0f, 0f, -1f,
         -0.1f, -0.1f, -0.9f,
     ), drawMode = GL_LINES) {
-        private val dataVbo = GLBuffer()
+        private val dataVbo = GLVertexBuffer()
 
         override fun bindData(data: List<DirectionalLight>) {
             val buffer = MemoryUtil.memAllocFloat(data.size * 3)
@@ -91,7 +91,7 @@ object WireframeRenderPipeline : RenderPipeline {
     // === Mesh Wrapper ===
 
     private class MeshWrapper(private val original: ModelMesh) {
-        private val vbo = GLBuffer()
+        private val vbo = GLVertexBuffer()
         private val vao by contextLazy {
             val v = GLVertexArray()
             v.bind()
@@ -174,7 +174,7 @@ object WireframeRenderPipeline : RenderPipeline {
         1f, 0f, 0f,
         1f, 1f, 0f,
     ), indices = intArrayOf(0, 1, 2, 1, 3, 2)) {
-        private val colorVbo = GLBuffer()
+        private val colorVbo = GLVertexBuffer()
 
         override fun bindData(data: List<Color>) {
             val colorBuffer = MemoryUtil.memAllocFloat(data.size * 3)

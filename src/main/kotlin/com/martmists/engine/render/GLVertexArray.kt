@@ -6,10 +6,8 @@ import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL46.*
 
 class GLVertexArray : ResourceWithCleanup() {
-    private val onCtx = glfwGetCurrentContext()
-    private val id = run {
-        glGenVertexArrays()
-    }
+    private val id = glGenVertexArrays()
+
     private var attrib = 0
     private var offset = 0
     var stride = 0
@@ -52,10 +50,14 @@ class GLVertexArray : ResourceWithCleanup() {
         return "GLVertexArray(#$id)"
     }
 
-    override fun cleanup() {
-        val current = glfwGetCurrentContext()
-        glfwMakeContextCurrent(onCtx)
-        glDeleteVertexArrays(id)
-        glfwMakeContextCurrent(current)
+    override fun createCleaner(): Runnable = VAOCleaner(glfwGetCurrentContext(), id)
+
+    private class VAOCleaner(val ctx: Long, val id: Int) : Runnable {
+        override fun run() {
+            val toRestore = glfwGetCurrentContext()
+            glfwMakeContextCurrent(ctx)
+            glDeleteVertexArrays(id)
+            glfwMakeContextCurrent(toRestore)
+        }
     }
 }
