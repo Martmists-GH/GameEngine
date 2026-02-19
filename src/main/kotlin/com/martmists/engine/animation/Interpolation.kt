@@ -4,6 +4,9 @@ import com.martmists.engine.math.Quat
 import com.martmists.engine.math.Vec3
 import org.joml.Quaternionf
 
+/**
+ * Interpolations for various types.
+ */
 fun interface Interpolation<T> {
     fun interpolate(start: T, end: T, value: Float): T
 

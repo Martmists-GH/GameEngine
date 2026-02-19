@@ -5,8 +5,10 @@ import com.martmists.engine.util.Resource
 import com.martmists.engine.util.ResourceLoader
 import com.martmists.engine.util.contextLazy
 
+/**
+ * Various shaders used in the game engine by default.
+ */
 object BuiltinShaders {
-
     val default by contextLazy {
         Shader(
             ResourceLoader.loadTextFile(Resource("res:shaders/default.vert.glsl")),

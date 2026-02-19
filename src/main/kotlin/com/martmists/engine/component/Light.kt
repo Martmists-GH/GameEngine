@@ -7,6 +7,9 @@ import com.martmists.engine.math.Color
 import com.martmists.engine.scene.GameObject
 import java.nio.ByteBuffer
 
+/**
+ * Base class for lights.
+ */
 abstract class Light(gameObject: GameObject) : Component(gameObject) {
     var color = Color.White
     var intensity = 1.0f
@@ -24,6 +27,11 @@ abstract class Light(gameObject: GameObject) : Component(gameObject) {
     }
 }
 
+/**
+ * Global directional light.
+ *
+ * The [GameObject]'s rotation is used for direction, and the translation is exclusively used for wireframe rendering.
+ */
 class DirectionalLight(gameObject: GameObject) : Light(gameObject) {
     override fun copyFor(other: GameObject) = DirectionalLight(other).also {
         it.color = color
@@ -31,6 +39,9 @@ class DirectionalLight(gameObject: GameObject) : Light(gameObject) {
     }
 }
 
+/**
+ * Point light.
+ */
 class PointLight(gameObject: GameObject) : Light(gameObject) {
     var range = 10.0f
 
@@ -55,6 +66,9 @@ class PointLight(gameObject: GameObject) : Light(gameObject) {
     }
 }
 
+/**
+ * Spot light.
+ */
 class SpotLight(gameObject: GameObject) : Light(gameObject) {
     var range = 10.0f
     var angle = 45.0f

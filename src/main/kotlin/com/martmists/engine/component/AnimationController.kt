@@ -10,6 +10,11 @@ import com.martmists.engine.animation.Keyframe
 import org.lwjgl.assimp.Assimp.aiAnimInterpolation_Linear
 import org.lwjgl.assimp.Assimp.aiAnimInterpolation_Spherical_Linear
 
+/**
+ * Animation controller for [ModelInstance][com.martmists.engine.model.ModelInstance] objects.
+ *
+ * Requires the [GameObject] to have a [ModelRenderer] component.
+ */
 class AnimationController(gameObject: GameObject) : Component(gameObject) {
     private data class AnimationState(
         val animation: Animation,

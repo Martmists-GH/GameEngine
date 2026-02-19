@@ -5,6 +5,12 @@ import com.martmists.engine.Input
 import com.martmists.engine.math.Vec3
 import org.lwjgl.glfw.GLFW.*
 
+/**
+ * Camera controller component.
+ *
+ * Currently, this uses WASD, Space and Left Shift globally to move the camera.
+ * Requires the [GameObject] to have a [Camera] component.
+ */
 class CameraController(gameObject: GameObject) : Component(gameObject) {
     var speed = 5f
 

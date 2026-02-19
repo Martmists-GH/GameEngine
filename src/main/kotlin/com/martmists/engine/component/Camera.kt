@@ -6,6 +6,9 @@ import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Quat
 import com.martmists.engine.math.Vec3
 
+/**
+ * Camera component to use for rendering [Viewports][com.martmists.engine.scene.Viewport].
+ */
 class Camera(gameObject: GameObject) : Component(gameObject) {
     var viewMatrix = Mat4x4.Identity
         private set
@@ -22,6 +25,7 @@ class Camera(gameObject: GameObject) : Component(gameObject) {
     }
 
     override fun onUpdate(delta: Float) {
+        // TODO: Check if we can use worldScale for zoom?
         viewMatrix = Mat4x4.Identity
             .rotate(gameObject.transform.worldRotation)
             .translate(-gameObject.transform.worldTranslation)

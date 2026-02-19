@@ -5,6 +5,9 @@ import com.martmists.engine.util.contextLazy
 import org.lwjgl.opengl.GL46.*
 import org.lwjgl.system.MemoryUtil
 
+/**
+ * Represents a Mesh on the GPU, designed for instanced rendering.
+ */
 abstract class Mesh<T>(
     val name: String,
     vertices: FloatArray,
@@ -31,6 +34,9 @@ abstract class Mesh<T>(
     protected abstract fun GLVertexArray.setupAttributes()
     protected abstract fun stride(): Int
 
+    /**
+     * Bind the instance VBO at the specified layout location.
+     */
     protected fun GLVertexArray.ivbo(index: Int) {
         ivbo.bind()
         stride = 16 * 4

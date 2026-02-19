@@ -6,6 +6,9 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+/**
+ * Various easings
+ */
 fun interface Easing {
     fun ease(value: Float): Float
 

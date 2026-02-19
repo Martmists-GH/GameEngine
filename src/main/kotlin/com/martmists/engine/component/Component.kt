@@ -6,13 +6,12 @@ import com.martmists.engine.util.Serializable
 import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 
-abstract class Component(gameObject: GameObject) : Serializable {
-    // Weakref to prevent circular references
-    // I know the JVM knows how to clean up circular references
-    // But I believe this *should* be better for GC performance
-    private val gameObjectRef = WeakReference(gameObject)
-    val gameObject: GameObject
-        get() = gameObjectRef.get()!!
+/**
+ * Base Component class.
+ *
+ * Every component is expected to have a 1-arg GameObject constructor for (de-)serialization.
+ */
+abstract class Component(val gameObject: GameObject) : Serializable {
     val transform: Transform
         get() = gameObject.transform
 

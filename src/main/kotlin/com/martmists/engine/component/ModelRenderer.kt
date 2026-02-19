@@ -8,6 +8,9 @@ import com.martmists.engine.scene.GameObject
 import com.martmists.engine.util.ResourceLoader
 import java.nio.ByteBuffer
 
+/**
+ * Model renderer for [ModelInstance][com.martmists.engine.model.ModelInstance] objects.
+ */
 class ModelRenderer(gameObject: GameObject) : Component(gameObject) {
     var model: ModelInstance? = null
 
