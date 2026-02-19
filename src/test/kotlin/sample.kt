@@ -38,6 +38,7 @@ fun main() {
         throw IllegalStateException("Unable to initialize GLFW")
     }
 
+    // Due to how OpenGL works, there needs to be at least *one* context present before we can create objects
     val win = Window(1280, 720, "Game Window")
     val scene = Scene()
 
