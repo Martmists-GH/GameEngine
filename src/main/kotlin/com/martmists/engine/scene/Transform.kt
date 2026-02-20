@@ -9,7 +9,6 @@ import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Quat
 import com.martmists.engine.math.Vec3
 import com.martmists.engine.util.Serializable
-import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 
 class Transform(internal val gameObject: GameObject) : Serializable {

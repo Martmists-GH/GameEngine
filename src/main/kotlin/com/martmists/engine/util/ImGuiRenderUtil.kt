@@ -1,12 +1,10 @@
 package com.martmists.engine.util
 
-import com.martmists.engine.util.ImGuiRenderUtil.ImguiObjects
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import imgui.internal.ImGuiContext
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 
 object ImGuiRenderUtil {
     fun render(content: () -> Unit) {

@@ -15,7 +15,6 @@ import com.martmists.engine.model.Model
 import com.martmists.engine.model.ModelPart
 import com.martmists.engine.render.Shader
 import com.martmists.engine.render.TextureHandle
-import com.martmists.engine.sprite.Sprite
 import com.martmists.engine.sprite.Spritesheet
 import org.joml.Matrix4f
 import org.lwjgl.PointerBuffer

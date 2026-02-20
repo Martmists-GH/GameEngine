@@ -5,7 +5,6 @@ import com.martmists.engine.scene.Viewport
 import com.martmists.engine.util.GLGarbageCollector
 import com.martmists.engine.util.ResourceWithCleanup
 import org.joml.Vector2i
-import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL46.*
