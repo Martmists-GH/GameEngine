@@ -12,7 +12,7 @@ import com.martmists.engine.util.Serializable
 import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 
-class Transform(gameObject: GameObject) : Serializable {
+class Transform(internal val gameObject: GameObject) : Serializable {
     var scale = Vec3.One
     var translation = Vec3.Zero
     var rotation = Quat.Identity
@@ -33,19 +33,9 @@ class Transform(gameObject: GameObject) : Serializable {
             rotation = value premul ((parent?.worldRotation ?: Quat.Identity).conjugate)
         }
 
-    internal val objectRef = WeakReference(gameObject)
     private var objectRefHolder: GameObject? = null
     var parent: Transform? = null
-        private set(value) {
-            field = value
-            objectRefHolder = if (value == null) {
-                // We are a root, discard reference
-                null
-            } else {
-                // We are a child, obtain a reference
-                objectRef.get()
-            }
-        }
+
     val children: Set<Transform>
         field = mutableSetOf<Transform>()
     fun addChild(child: Transform) {
@@ -76,7 +66,7 @@ class Transform(gameObject: GameObject) : Serializable {
     }
 
     override fun serialize(): ByteArray {
-        val children = children.map { it.objectRef.get()!!.serialize() }
+        val children = children.map { it.gameObject.serialize() }
         return buildBuffer(44 + children.sumOf { it.size }) {
             putVec3(translation)
             putVec3(scale)

@@ -20,7 +20,8 @@ class GameObject(
     inline fun <reified T : Component> hasComponent() = hasComponent(T::class)
     fun <T : Component> hasComponent(klass: KClass<T>) = components.containsKey(klass)
 
-    inline fun <reified T : Component> getComponent() = getComponent(T::class) as T
+    inline fun <reified T : Component> getComponent() = getComponent(T::class)
+    @Suppress("UNCHECKED_CAST")
     fun <T : Component> getComponent(klass: KClass<T>) = components[klass]!!.first as T
 
     inline fun <reified T : Component> addComponent() = addComponent({ T::class.primaryConstructor!!.call(it) }, T::class)
@@ -56,7 +57,7 @@ class GameObject(
     private fun <T> delegateToComponents(fn: Component.(T) -> Unit, arg: T) = delegateToComponents { fn(arg) }
     private fun delegateToChildren(fn: GameObject.() -> Unit) {
         for (child in transform.children) {
-            child.objectRef.get()!!.fn()
+            child.gameObject.fn()
         }
     }
     private fun <T> delegateToChildren(fn: GameObject.(T) -> Unit, arg: T) = delegateToChildren { fn(arg) }
@@ -65,10 +66,15 @@ class GameObject(
         return GameObject("$name (clone)").also { go ->
             go.transform.copyFrom(transform)
             delegateToComponents {
-                val klass = components.entries.first { e -> e.value === this }.key
+                val klass = components.entries.first { e -> e.value.first === this }.key
+                @Suppress("UNCHECKED_CAST")
                 go.addComponent({ copyFor(go) }, klass as KClass<Component>)
             }
         }
+    }
+
+    internal fun flattenTree(): List<GameObject> {
+        return listOf(this) + transform.children.flatMap { it.gameObject.flattenTree() }
     }
 
     internal fun preUpdate(delta: Float) {
@@ -103,14 +109,15 @@ class GameObject(
         }
     }
 
-    override fun deserialize(from: ByteBuffer) {
-        name = ByteArray(from.getInt()).also { from.get(it) }.decodeToString()
-        transform.deserialize(from)
-        repeat(from.getInt()) {
-            val fqn = ByteArray(from.getInt()).also { from.get(it) }.decodeToString()
+    @Suppress("UNCHECKED_CAST")
+    override fun deserialize(buffer: ByteBuffer) {
+        name = ByteArray(buffer.getInt()).also { buffer.get(it) }.decodeToString()
+        transform.deserialize(buffer)
+        repeat(buffer.getInt()) {
+            val fqn = ByteArray(buffer.getInt()).also { buffer.get(it) }.decodeToString()
             val classRef = Class.forName(fqn)
             val comp = classRef.getConstructor(GameObject::class.java).newInstance(this) as Component
-            comp.deserialize(from)
+            comp.deserialize(buffer)
             val allClasses = classRef.kotlin.allSuperclasses.filter { it.isSubclassOf(Component::class) && it != Component::class }
             components[classRef.kotlin as KClass<out Component>] = comp to true
             for (klass in allClasses) {

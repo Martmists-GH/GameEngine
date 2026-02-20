@@ -13,7 +13,7 @@ class Viewport(var scene: Scene = Scene.Empty) {
 
     var camera: GameObject?
         get() {
-            val cameras = scene.objects.filter { it.hasComponent<Camera>() }
+            val cameras = scene.allObjects().filter { it.hasComponent<Camera>() }
             return if (activeCameraIndex in cameras.indices) {
                 cameras[activeCameraIndex]
             } else null
@@ -22,7 +22,7 @@ class Viewport(var scene: Scene = Scene.Empty) {
             activeCameraIndex = if (value == null) {
                 -1
             } else {
-                scene.objects.filter { it.hasComponent<Camera>() }.indexOf(value)
+                scene.allObjects().filter { it.hasComponent<Camera>() }.indexOf(value)
             }
         }
 }

@@ -12,6 +12,10 @@ class Scene : Serializable {
         objects.add(go)
     }
 
+    fun allObjects(): List<GameObject> {
+        return objects.flatMap { it.flattenTree() }
+    }
+
     override fun serialize(): ByteArray {
         val objectCount = objects.size
         val childBuffers = objects.map(Serializable::serialize)

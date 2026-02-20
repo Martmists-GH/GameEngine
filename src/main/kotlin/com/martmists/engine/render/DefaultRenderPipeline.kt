@@ -87,19 +87,20 @@ object DefaultRenderPipeline : RenderPipeline {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
         val scene = viewport.scene
+        val objects = scene.allObjects()
         viewport.camera?.let { cameraObj ->
             val camera = cameraObj.getComponent<Camera>()
 
-            val directionalLights = scene.objects.filter { it.hasComponent<DirectionalLight>() }.map { it.getComponent<DirectionalLight>() }
-            val pointLights = scene.objects.filter { it.hasComponent<PointLight>() }.map { it.getComponent<PointLight>() }
-            val spotLights = scene.objects.filter { it.hasComponent<SpotLight>() }.map { it.getComponent<SpotLight>() }
+            val directionalLights = objects.filter { it.hasComponent<DirectionalLight>() }.map { it.getComponent<DirectionalLight>() }
+            val pointLights = objects.filter { it.hasComponent<PointLight>() }.map { it.getComponent<PointLight>() }
+            val spotLights = objects.filter { it.hasComponent<SpotLight>() }.map { it.getComponent<SpotLight>() }
 
             val modelBatches = mutableMapOf<BatchInfo, MutableList<BatchEntry>>()
             val modelInfo = mutableMapOf<BatchInfo, Model>()
             val spriteBatches = mutableMapOf<SpriteAtlas, MutableList<SpriteInfo>>()
 
             // TODO: Also collect nested objects
-            for (go in scene.objects) {
+            for (go in objects) {
                 if (go.hasComponent<ModelRenderer>()) {
                     val mr = go.getComponent<ModelRenderer>()
                     val modelInst = mr.model ?: continue
@@ -328,7 +329,7 @@ object DefaultRenderPipeline : RenderPipeline {
             shader.unbind()
         }
 
-        val imguiObjects = scene.objects.filter { it.hasComponent<ImguiRenderer>() }
+        val imguiObjects = objects.filter { it.hasComponent<ImguiRenderer>() }
         ImGuiRenderUtil.render {
             imguiObjects.forEach {
                 val ir = it.getComponent<ImguiRenderer>()

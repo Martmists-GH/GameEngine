@@ -211,6 +211,7 @@ object WireframeRenderPipeline : RenderPipeline {
         val cameraObj = viewport.camera ?: return
         val camera = cameraObj.getComponent<Camera>()
         val scene = viewport.scene
+        val objects = scene.allObjects()
 
         glClearColor(0f, 0f, 0f, 1.0f)
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -228,9 +229,9 @@ object WireframeRenderPipeline : RenderPipeline {
         Axes.renderSingle(Mat4x4.Identity, Unit)
         shader.unbind()
 
-        val directionalLights = scene.objects.filter { it.hasComponent<DirectionalLight>() }
-        val pointLights = scene.objects.filter { it.hasComponent<PointLight>() }
-        val spotLights = scene.objects.filter { it.hasComponent<SpotLight>() }
+        val directionalLights = objects.filter { it.hasComponent<DirectionalLight>() }
+        val pointLights = objects.filter { it.hasComponent<PointLight>() }
+        val spotLights = objects.filter { it.hasComponent<SpotLight>() }
 
         if (directionalLights.isNotEmpty()) {
             shader = BuiltinShaders.wireframeSimple
@@ -251,13 +252,12 @@ object WireframeRenderPipeline : RenderPipeline {
         }
 
         // TODO: Instanced rendering
-        // TODO: Multiple quads for 9-sliced sprites
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         shader = BuiltinShaders.wireframeSimple
         shader.bind()
         shader.setUniform("u_View", camera.viewMatrix)
         shader.setUniform("u_Proj", camera.projectionMatrix)
-        for (obj in scene.objects) {
+        for (obj in objects) {
             if (obj.hasComponent<SpriteRenderer>()) {
                 val sr = obj.getComponent<SpriteRenderer>()
                 val sprite = sr.sprite ?: continue
@@ -274,8 +274,7 @@ object WireframeRenderPipeline : RenderPipeline {
 
         val renderData = mutableMapOf<ModelMesh, MutableList<BatchEntry>>()
 
-        // TODO: Also collect nested objects
-        for (go in scene.objects) {
+        for (go in objects) {
             if (!go.hasComponent<ModelRenderer>()) continue
             val mr = go.getComponent<ModelRenderer>()
             val modelInst = mr.model ?: continue
@@ -311,7 +310,7 @@ object WireframeRenderPipeline : RenderPipeline {
         }
         shader.unbind()
 
-        val imguiObjects = scene.objects.filter { it.hasComponent<ImguiRenderer>() }
+        val imguiObjects = objects.filter { it.hasComponent<ImguiRenderer>() }
         ImGuiRenderUtil.render {
             imguiObjects.forEach {
                 val ir = it.getComponent<ImguiRenderer>()

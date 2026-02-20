@@ -90,6 +90,7 @@ class AnimationController(gameObject: GameObject) : Component(gameObject) {
         }
 
         val factor = (elapsed / frameTime).coerceIn(0f, 1f)
+        @Suppress("UNCHECKED_CAST")
         val interp = when (default) {
             is Vec3 -> when (current.interpolation) {
                 aiAnimInterpolation_Linear -> Interpolation.LINEAR_VEC3

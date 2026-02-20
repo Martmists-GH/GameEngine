@@ -145,9 +145,10 @@ fun main() {
         val now = glfwGetTime()
         val delta = (now - lastTime).toFloat()
 
-        win.viewport.scene.objects.onEach { it.preUpdate(delta) }
-        win.viewport.scene.objects.onEach { it.onUpdate(delta) }
-        win.viewport.scene.objects.onEach { it.postUpdate(delta) }
+        val objects = win.viewport.scene.allObjects()
+        objects.onEach { it.preUpdate(delta) }
+        objects.onEach { it.onUpdate(delta) }
+        objects.onEach { it.postUpdate(delta) }
 
         if (Input.isAnyKeyDown(GLFW_KEY_TAB)) {
             camera.getComponent<Camera>().lookAt(obj)
