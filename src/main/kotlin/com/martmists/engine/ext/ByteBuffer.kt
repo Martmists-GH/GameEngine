@@ -1,11 +1,13 @@
 package com.martmists.engine.ext
 
 import com.martmists.engine.math.Color
+import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Quat
 import com.martmists.engine.math.Vec2
 import com.martmists.engine.math.Vec2i
 import com.martmists.engine.math.Vec3
 import com.martmists.engine.util.Resource
+import org.joml.Matrix4f
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -38,7 +40,6 @@ fun ByteBuffer.putColor(value: Color) {
     putFloat(value.b)
     putFloat(value.a)
 }
-
 
 fun ByteBuffer.putString(value: String) {
     val bytes = value.encodeToByteArray()

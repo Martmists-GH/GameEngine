@@ -93,7 +93,7 @@ class GameObject(
     override fun serialize(): ByteArray {
         val name = name.toByteArray()
         val trans = transform.serialize()
-        val components = components.filter { it.value.second }.map {
+        val components = components.filter { it.value.second && it.value.first.isSerializable }.map {
             it.key.qualifiedName!!.toByteArray() to it.value.first.serialize()
         }
         return buildBuffer(4 + name.size + trans.size + 4 + components.sumOf { (fqn, comp) -> 4 + fqn.size + comp.size }) {

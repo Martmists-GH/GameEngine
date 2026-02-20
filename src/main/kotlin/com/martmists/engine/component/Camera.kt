@@ -1,10 +1,14 @@
 package com.martmists.engine.component
 
+import com.martmists.engine.ext.buildBuffer
+import com.martmists.engine.ext.getMat4x4
+import com.martmists.engine.ext.putMat4x4
 import com.martmists.engine.scene.GameObject
 import com.martmists.engine.scene.Transform
 import com.martmists.engine.math.Mat4x4
 import com.martmists.engine.math.Quat
 import com.martmists.engine.math.Vec3
+import java.nio.ByteBuffer
 
 /**
  * Camera component to use for rendering [Viewports][com.martmists.engine.scene.Viewport].
@@ -40,5 +44,20 @@ class Camera(gameObject: GameObject) : Component(gameObject) {
 
     override fun copyFor(other: GameObject) = Camera(other)
 
-    // TODO: Serialization
+    override fun serialize(): ByteArray {
+        buildBuffer(64 + 16) {
+            putFloat(fov)
+            putFloat(aspectRatio)
+            putFloat(near)
+            putFloat(far)
+        }
+    }
+
+    override fun deserialize(buffer: ByteBuffer) {
+        fov = buffer.getFloat()
+        aspectRatio = buffer.getFloat()
+        near = buffer.getFloat()
+        far = buffer.getFloat()
+        init()
+    }
 }

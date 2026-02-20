@@ -46,6 +46,7 @@ abstract class Component(val gameObject: GameObject) : Serializable {
     abstract fun copyFor(other: GameObject): Component
 
     // Default serialization: do nothing
+    open val isSerializable = true
     override fun serialize(): ByteArray { return byteArrayOf() }
     override fun deserialize(buffer: ByteBuffer) { }
 }

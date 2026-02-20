@@ -20,12 +20,12 @@ class ModelRenderer(gameObject: GameObject) : Component(gameObject) {
 
     override fun serialize(): ByteArray {
         val m = model
-        if (m != null) {
-            return buildBuffer(4 + m.model.resource.path.length) {
+        return if (m != null) {
+            buildBuffer(4 + m.model.resource.path.length) {
                 putResource(m.model.resource)
             }
         } else {
-            return buildBuffer(4) {
+            buildBuffer(4) {
                 putInt(0)
             }
         }

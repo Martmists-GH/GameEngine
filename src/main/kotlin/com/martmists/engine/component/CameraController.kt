@@ -2,8 +2,10 @@ package com.martmists.engine.component
 
 import com.martmists.engine.scene.GameObject
 import com.martmists.engine.Input
+import com.martmists.engine.ext.buildBuffer
 import com.martmists.engine.math.Vec3
 import org.lwjgl.glfw.GLFW.*
+import java.nio.ByteBuffer
 
 /**
  * Camera controller component.
@@ -44,5 +46,13 @@ class CameraController(gameObject: GameObject) : Component(gameObject) {
         it.speed = speed
     }
 
-    // TODO: Serialization
+    override fun serialize(): ByteArray {
+        return buildBuffer(4) {
+            putFloat(speed)
+        }
+    }
+
+    override fun deserialize(buffer: ByteBuffer) {
+        speed = buffer.float
+    }
 }

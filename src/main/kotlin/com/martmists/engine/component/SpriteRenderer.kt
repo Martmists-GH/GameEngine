@@ -1,8 +1,10 @@
 package com.martmists.engine.component
 
+import com.martmists.engine.ext.buildBuffer
 import com.martmists.engine.math.Vec2
 import com.martmists.engine.scene.GameObject
 import com.martmists.engine.sprite.Sprite
+import java.nio.ByteBuffer
 
 /**
  * Sprite renderer for [Sprite] objects.
@@ -19,4 +21,6 @@ class SpriteRenderer(gameObject: GameObject) : Component(gameObject) {
     override fun copyFor(other: GameObject) = SpriteRenderer(other).also {
         it.sprite = sprite
     }
+
+    // TODO: Serialization
 }
