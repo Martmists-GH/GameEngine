@@ -1,7 +1,7 @@
 package com.martmists.engine.util
 
 import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.getAndUpdate
+import kotlinx.atomicfu.update
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.glfwDestroyWindow
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
@@ -60,12 +60,12 @@ object GLGarbageCollector {
         glfwMakeContextCurrent(toRestore)
     }
 
-    fun markVBO(ctx: Long, vbo: Int) { vbos.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(vbo); it } }
-    fun markVAO(ctx: Long, vao: Int) { vaos.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(vao); it } }
-    fun markFBO(ctx: Long, fbo: Int) { fbos.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(fbo); it } }
-    fun markRBO(ctx: Long, rbo: Int) { rbos.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(rbo); it } }
-    fun markShader(ctx: Long, shader: Int)  { shaders.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(shader); it } }
-    fun markTexture(ctx: Long, texture: Int)  { textures.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(texture); it } }
-    fun markCallback(ctx: Long, callback: () -> Unit)  { callbacks.getAndUpdate { it.getOrPut(ctx, ::mutableListOf).add(callback); it } }
-    fun markContext(ctx: Long)  { contexts.getAndUpdate { it.add(ctx); it } }
+    fun markVBO(ctx: Long, vbo: Int) { vbos.update { it.getOrPut(ctx, ::mutableListOf).add(vbo); it } }
+    fun markVAO(ctx: Long, vao: Int) { vaos.update { it.getOrPut(ctx, ::mutableListOf).add(vao); it } }
+    fun markFBO(ctx: Long, fbo: Int) { fbos.update { it.getOrPut(ctx, ::mutableListOf).add(fbo); it } }
+    fun markRBO(ctx: Long, rbo: Int) { rbos.update { it.getOrPut(ctx, ::mutableListOf).add(rbo); it } }
+    fun markShader(ctx: Long, shader: Int)  { shaders.update { it.getOrPut(ctx, ::mutableListOf).add(shader); it } }
+    fun markTexture(ctx: Long, texture: Int)  { textures.update { it.getOrPut(ctx, ::mutableListOf).add(texture); it } }
+    fun markCallback(ctx: Long, callback: () -> Unit)  { callbacks.update { it.getOrPut(ctx, ::mutableListOf).add(callback); it } }
+    fun markContext(ctx: Long)  { contexts.update { it.add(ctx); it } }
 }

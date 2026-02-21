@@ -1,8 +1,6 @@
 package com.martmists.engine.component
 
 import com.martmists.engine.ext.buildBuffer
-import com.martmists.engine.ext.getMat4x4
-import com.martmists.engine.ext.putMat4x4
 import com.martmists.engine.scene.GameObject
 import com.martmists.engine.scene.Transform
 import com.martmists.engine.math.Mat4x4
@@ -45,7 +43,7 @@ class Camera(gameObject: GameObject) : Component(gameObject) {
     override fun copyFor(other: GameObject) = Camera(other)
 
     override fun serialize(): ByteArray {
-        buildBuffer(64 + 16) {
+        return buildBuffer(64 + 16) {
             putFloat(fov)
             putFloat(aspectRatio)
             putFloat(near)

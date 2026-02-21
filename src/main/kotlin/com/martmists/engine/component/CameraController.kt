@@ -1,8 +1,8 @@
 package com.martmists.engine.component
 
 import com.martmists.engine.scene.GameObject
-import com.martmists.engine.Input
 import com.martmists.engine.ext.buildBuffer
+import com.martmists.engine.input.InputHandler
 import com.martmists.engine.math.Vec3
 import org.lwjgl.glfw.GLFW.*
 import java.nio.ByteBuffer
@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
  * Currently, this uses WASD, Space and Left Shift globally to move the camera.
  * Requires the [GameObject] to have a [Camera] component.
  */
-class CameraController(gameObject: GameObject) : Component(gameObject) {
+class CameraController(gameObject: GameObject) : InputHandlingComponent(gameObject) {
     var speed = 5f
 
     override fun onUpdate(delta: Float) {
@@ -21,12 +21,12 @@ class CameraController(gameObject: GameObject) : Component(gameObject) {
         var dy = 0f
         var dz = 0f
 
-        if (Input.isAnyKeyDown(GLFW_KEY_W)) dz -= 1f
-        if (Input.isAnyKeyDown(GLFW_KEY_S)) dz += 1f
-        if (Input.isAnyKeyDown(GLFW_KEY_A)) dx -= 1f
-        if (Input.isAnyKeyDown(GLFW_KEY_D)) dx += 1f
-        if (Input.isAnyKeyDown(GLFW_KEY_SPACE)) dy += 1f
-        if (Input.isAnyKeyDown(GLFW_KEY_LEFT_SHIFT)) dy -= 1f
+        if (InputHandler.isKeyHeld(GLFW_KEY_W)) dz -= 1f
+        if (InputHandler.isKeyHeld(GLFW_KEY_S)) dz += 1f
+        if (InputHandler.isKeyHeld(GLFW_KEY_A)) dx -= 1f
+        if (InputHandler.isKeyHeld(GLFW_KEY_D)) dx += 1f
+        if (InputHandler.isKeyHeld(GLFW_KEY_SPACE)) dy += 1f
+        if (InputHandler.isKeyHeld(GLFW_KEY_LEFT_SHIFT)) dy -= 1f
 
         if (dx != 0f || dy != 0f || dz != 0f) {
             val rot = gameObject.transform.worldRotation.conjugate

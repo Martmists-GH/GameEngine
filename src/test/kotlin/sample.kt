@@ -1,9 +1,9 @@
-import com.martmists.engine.Input
 import com.martmists.engine.Window
 import com.martmists.engine.component.Camera
 import com.martmists.engine.component.CameraController
 import com.martmists.engine.component.DirectionalLight
 import com.martmists.engine.component.ImguiRenderer
+import com.martmists.engine.input.InputHandler
 import com.martmists.engine.component.ModelRenderer
 import com.martmists.engine.component.SpriteRenderer
 import com.martmists.engine.math.Quat
@@ -150,7 +150,7 @@ fun main() {
         objects.onEach { it.onUpdate(delta) }
         objects.onEach { it.postUpdate(delta) }
 
-        if (Input.isAnyKeyDown(GLFW_KEY_TAB)) {
+        if (InputHandler.isKeyHeld(GLFW_KEY_TAB)) {
             camera.getComponent<Camera>().lookAt(obj)
         }
 
@@ -158,6 +158,7 @@ fun main() {
 
         lastTime = now
         GLGarbageCollector.clean()
+        InputHandler.stepFrame()
 
         glfwPollEvents()
     }

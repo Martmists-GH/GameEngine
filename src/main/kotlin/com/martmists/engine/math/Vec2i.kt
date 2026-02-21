@@ -31,4 +31,8 @@ value class Vec2i(val joml: Vector2ic) {
     infix fun distance(other: Vec2i) = joml distance other.joml
 
     override fun toString() = "Vec2i($x, $y)"
+
+    companion object {
+        val Zero = Vec2i(0)
+    }
 }

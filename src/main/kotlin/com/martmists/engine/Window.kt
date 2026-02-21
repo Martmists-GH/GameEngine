@@ -1,5 +1,6 @@
 package com.martmists.engine
 
+import com.martmists.engine.input.InputHandler
 import com.martmists.engine.render.Framebuffer
 import com.martmists.engine.scene.Viewport
 import com.martmists.engine.util.GLGarbageCollector
@@ -41,7 +42,7 @@ class Window(initialWidth: Int, initialHeight: Int, title: String) : ResourceWit
         capabilities = GL.createCapabilities()
         glfwSwapInterval(1)
 
-        Input.init(handle)
+        InputHandler.setupHandlersFor(this)
 
         val wArr = IntArray(1)
         val hArr = IntArray(1)
