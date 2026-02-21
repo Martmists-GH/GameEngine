@@ -5,7 +5,7 @@ import com.martmists.engine.input.InputHandler
 import com.martmists.engine.scene.GameObject
 
 abstract class InputHandlingComponent(gameObject: GameObject) : Component(gameObject) {
-    val isActive: Boolean
+    val isActiveHandler: Boolean
         get() = InputHandler.activeHandler == this
 
     fun markActiveInputHandler() {

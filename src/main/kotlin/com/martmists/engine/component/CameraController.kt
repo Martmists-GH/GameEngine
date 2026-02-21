@@ -17,6 +17,8 @@ class CameraController(gameObject: GameObject) : InputHandlingComponent(gameObje
     var speed = 5f
 
     override fun onUpdate(delta: Float) {
+        if (!isActiveHandler) return
+
         var dx = 0f
         var dy = 0f
         var dz = 0f
