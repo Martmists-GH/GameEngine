@@ -72,7 +72,9 @@ fun main() {
 
     val camera = GameObject("Camera")
     camera.addComponent<Camera>()
-    camera.addComponent<CameraController>()
+    camera.addComponent<CameraController>().apply {
+        markActiveInputHandler()
+    }
     camera.transform.translation = Vec3(2f, 2f, 2f)
     camera.getComponent<Camera>().lookAt(obj)
 
